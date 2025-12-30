@@ -1,9 +1,12 @@
+        let exercises = [];
+        let warmups = [];
+
         fetch('data/exercises.json')
             .then(response => response.json())
             .then(data => {
-                const warmups = data.warmupNames.map(w => ({ name: w.name, diff: 1, desc: w.desc, id: w.name.replace(/\s/g, '').toLowerCase() }));
+                warmups = data.warmupNames.map(w => ({ name: w.name, diff: 1, desc: w.desc, id: w.name.replace(/\s/g, '').toLowerCase() }));
                 const rawExercises = data.rawExercises;
-                const exercises = rawExercises.map(e => ({
+                exercises = rawExercises.map(e => ({
                     name: e.n,
                     diff: e.d,
                     desc: e.desc,
@@ -108,10 +111,10 @@
                 // 2. Filter exercises based on closeness to target difficulty
                 let pool = exercises.filter(e => {
                     const fb = state.exerciseFeedback[e.id];
-                    let effectiveDiff = e.d;
+                    let effectiveDiff = e.diff;
                     if (fb) {
-                        if (fb.avgScore >= 8) effectiveDiff += 2;
-                        if (fb.avgScore <= 3) effectiveDiff -= 2;
+                        if (fb.avgScore >= 8) effectiveDiff += 1;
+                        if (fb.avgScore <= 3) effectiveDiff -= 1;
                     }
                     effectiveDiff = Math.max(0, Math.min(10, effectiveDiff));
                     return Math.abs(effectiveDiff - targetDiff) <= 3;
@@ -121,9 +124,9 @@
                 pool.sort((a,b) => {
                     const getEff = (ex) => {
                         const fb = state.exerciseFeedback[ex.id];
-                        let eff = ex.d;
-                        if(fb && fb.avgScore >= 8) eff += 2;
-                        if(fb && fb.avgScore <= 3) eff -= 2;
+                        let eff = ex.diff;
+                        if(fb && fb.avgScore >= 8) eff += 1;
+                        if(fb && fb.avgScore <= 3) eff -= 1;
                         return Math.max(0, Math.min(10, eff));
                     };
                     const distA = Math.abs(getEff(a) - targetDiff) + Math.random();
@@ -177,9 +180,6 @@
             renderHome: (container) => {
                 const workoutCount = state.workouts.length;
                 const bias = state.settings.difficultyBias;
-                let statusMsg = "Balanced";
-                if(bias > 0.5) statusMsg = "Intensifying 🔥";
-                if(bias < -0.5) statusMsg = "Recovery Mode 🍃";
 
                 container.innerHTML = `
                     <div class="scroll-container">
@@ -201,12 +201,9 @@
                             </div>
                         </div>
 
-                        <div class="card" style="border-color: var(--primary-dim)">
-                            <h3 class="text-xl mb-2">Status: ${statusMsg}</h3>
-                            <button class="btn btn-primary btn-lg mt-4 animate-pulse" onclick="router.startWorkout()">
-                                Start 7-Min Workout
-                            </button>
-                        </div>
+                        <button class="btn btn-primary btn-lg" onclick="router.startWorkout()">
+                            Start 7-Min Workout
+                        </button>
 
                         <h3 class="text-xl mt-4 mb-2">Recent Activity</h3>
                         ${state.workouts.slice().reverse().slice(0,3).map(w => `
@@ -223,6 +220,10 @@
             },
 
             startWorkout: () => {
+                if (!exercises || exercises.length === 0) {
+                    alert('Exercises are still loading. Please wait.');
+                    return;
+                }
                 router.activeWorkout = Logic.generateWorkout();
                 router.navigate('workout');
             },
