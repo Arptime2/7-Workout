@@ -10,6 +10,7 @@
                     name: e.n,
                     diff: e.d,
                     desc: e.desc,
+                    bodyParts: e.bodyParts || [],
                     id: e.n.replace(/\s/g, '').toLowerCase()
                 }));
 
@@ -21,7 +22,7 @@
 
         let state = {
             workouts: store.get('workouts', []),
-            settings: store.get('settings', { weight: 70, difficultyBias: 0 }),
+            settings: store.get('settings', { weight: 70, difficultyBias: 0, focus: "full body" }),
             exerciseFeedback: store.get('ex_feedback', {}), // { exId: { avgScore: 5, count: 0 } }
             customExercises: store.get('custom_exercises', [])
         };
@@ -123,21 +124,73 @@
                     return Math.abs(effectiveDiff - targetDiff) <= 3;
                 });
 
-                // 3. Sort by closeness to target
-                pool.sort((a,b) => {
-                    const getEff = (ex) => {
-                        const fb = state.exerciseFeedback[ex.id];
-                        let eff = ex.diff;
-                        if(fb && fb.avgScore >= 8) eff += 1;
-                        if(fb && fb.avgScore <= 3) eff -= 1;
-                        return Math.max(0, Math.min(10, eff));
-                    };
-                    const distA = Math.abs(getEff(a) - targetDiff) + Math.random();
-                    const distB = Math.abs(getEff(b) - targetDiff) + Math.random();
-                    return distA - distB;
-                });
+                let selectedExercises;
+                if (state.settings.focus === "full body") {
+                    // Balanced selection
+                    let upperPool = pool.filter(e => e.bodyParts && e.bodyParts.some(p => ['chest', 'back', 'shoulders', 'biceps', 'triceps'].includes(p)));
+                    let lowerPool = pool.filter(e => e.bodyParts && e.bodyParts.some(p => ['quads', 'hamstrings', 'glutes', 'calves'].includes(p)));
+                    let corePool = pool.filter(e => e.bodyParts && e.bodyParts.some(p => ['abs', 'obliques'].includes(p)));
+                    let cardioPool = pool.filter(e => e.bodyParts && e.bodyParts.includes('cardio'));
 
-                const selectedExercises = pool.slice(0, 12);
+                    const sortPool = (p) => p.sort((a,b) => {
+                        const getEff = (ex) => {
+                            const fb = state.exerciseFeedback[ex.id];
+                            let eff = ex.diff;
+                            if(fb && fb.avgScore >= 8) eff += 1;
+                            if(fb && fb.avgScore <= 3) eff -= 1;
+                            return Math.max(0, Math.min(10, eff));
+                        };
+                        const distA = Math.abs(getEff(a) - targetDiff) + Math.random();
+                        const distB = Math.abs(getEff(b) - targetDiff) + Math.random();
+                        return distA - distB;
+                    });
+
+                    sortPool(upperPool);
+                    sortPool(lowerPool);
+                    sortPool(corePool);
+                    sortPool(cardioPool);
+
+                    selectedExercises = [
+                        ...upperPool.slice(0,4),
+                        ...lowerPool.slice(0,4),
+                        ...corePool.slice(0,2),
+                        ...cardioPool.slice(0,2)
+                    ];
+
+                    // Fill if needed
+                    if (selectedExercises.length < 12) {
+                        let remaining = pool.filter(e => !selectedExercises.includes(e));
+                        sortPool(remaining);
+                        selectedExercises.push(...remaining.slice(0, 12 - selectedExercises.length));
+                    }
+                    selectedExercises = selectedExercises.slice(0,12);
+                } else {
+                    // Filter by focus
+                    const focusFilters = {
+                        "upper body": (e) => e.bodyParts && e.bodyParts.some(p => ['chest', 'back', 'shoulders', 'biceps', 'triceps'].includes(p)),
+                        "lower body": (e) => e.bodyParts && e.bodyParts.some(p => ['quads', 'hamstrings', 'glutes', 'calves'].includes(p)),
+                        "core": (e) => e.bodyParts && e.bodyParts.some(p => ['abs', 'obliques'].includes(p))
+                    };
+                    if (focusFilters[state.settings.focus]) {
+                        pool = pool.filter(focusFilters[state.settings.focus]);
+                    }
+
+                    // 3. Sort by closeness to target
+                    pool.sort((a,b) => {
+                        const getEff = (ex) => {
+                            const fb = state.exerciseFeedback[ex.id];
+                            let eff = ex.diff;
+                            if(fb && fb.avgScore >= 8) eff += 1;
+                            if(fb && fb.avgScore <= 3) eff -= 1;
+                            return Math.max(0, Math.min(10, eff));
+                        };
+                        const distA = Math.abs(getEff(a) - targetDiff) + Math.random();
+                        const distB = Math.abs(getEff(b) - targetDiff) + Math.random();
+                        return distA - distB;
+                    });
+
+                    selectedExercises = pool.slice(0, 12);
+                }
                 // Shuffle for variety
                 for (let i = selectedExercises.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -481,17 +534,27 @@
                             </ul>
                         </div>
 
-                        <div class="card">
-                            <h3 class="text-xl mb-2">Your Bias Status</h3>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span>Recovery</span>
-                                <span>Hardcore</span>
-                            </div>
-                            <div class="w-full bg-card-border h-2 rounded overflow-hidden">
-                                <div style="width: ${((bias + 2) / 4.5) * 100}%; background: var(--primary); height: 100%"></div>
-                            </div>
-                            <p class="text-xs text-muted mt-2">Algorithm Bias: ${bias.toFixed(2)}</p>
-                        </div>
+                         <div class="card">
+                             <h3 class="text-xl mb-2 text-primary">3. Workout Focus & Balancing</h3>
+                             <p class="text-sm text-muted mb-4">Choose your workout focus in Settings. For Full Body, the algorithm balances exercises across major muscle groups to ensure comprehensive coverage.</p>
+                             <ul class="text-sm text-muted" style="padding-left:16px;">
+                                 <li class="mb-2"><strong>Full Body:</strong> Selects 4 upper body (chest/back/shoulders), 4 lower body (legs/glutes), 2 core (abs/obliques), and 2 cardio exercises for balanced training.</li>
+                                 <li class="mb-2"><strong>Specific Focus:</strong> Filters exercises to target only the selected body area (e.g., Upper Body focuses on push/pull movements).</li>
+                                 <li class="mb-2"><strong>Adaptive Selection:</strong> Within each group, exercises are chosen based on your difficulty level and personal feedback for optimal progression.</li>
+                             </ul>
+                         </div>
+
+                         <div class="card">
+                             <h3 class="text-xl mb-2">Your Bias Status</h3>
+                             <div class="flex justify-between text-sm mb-1">
+                                 <span>Recovery</span>
+                                 <span>Hardcore</span>
+                             </div>
+                             <div class="w-full bg-card-border h-2 rounded overflow-hidden">
+                                 <div style="width: ${((bias + 2) / 4.5) * 100}%; background: var(--primary); height: 100%"></div>
+                             </div>
+                             <p class="text-xs text-muted mt-2">Algorithm Bias: ${bias.toFixed(2)}</p>
+                         </div>
                     </div>
                 `;
             },
@@ -536,13 +599,30 @@
                             <label class="text-sm text-muted block mb-2">Description</label>
                             <textarea id="customDesc" class="btn w-full text-left" rows="3" placeholder="Describe how to perform the exercise"></textarea>
                         </div>
+                        <div class="card">
+                            <label class="text-sm text-muted block mb-2">Body Parts</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="body-part-option"><input type="checkbox" id="bp-chest" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Chest</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-back" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Back</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-shoulders" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Shoulders</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-biceps" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Biceps</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-triceps" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Triceps</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-abs" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Abs</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-obliques" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Obliques</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-glutes" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Glutes</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-quads" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Quads</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-hamstrings" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Hamstrings</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-calves" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Calves</label>
+                                <label class="body-part-option"><input type="checkbox" id="bp-cardio" onchange="this.parentElement.classList.toggle('selected', this.checked)"> Cardio</label>
+                            </div>
+                        </div>
                         <button class="btn btn-primary btn-lg w-full mt-4" onclick="router.addCustomExercise()">Add Exercise</button>
                         <h3 class="text-xl mt-4 mb-2">Your Custom Exercises</h3>
                         ${state.customExercises.map(e => `
                             <div class="card flex justify-between items-center">
                                 <div>
                                     <div class="font-bold">${e.name}</div>
-                                    <div class="text-sm text-muted">${e.diff}/10</div>
+                                    <div class="text-sm text-muted">${e.diff}/10 - ${e.bodyParts ? e.bodyParts.join(', ') : ''}</div>
                                 </div>
                                 <button class="btn btn-danger" onclick="router.deleteCustomExercise('${e.id}')">Delete</button>
                             </div>
@@ -555,6 +635,11 @@
                 const name = document.getElementById('customName').value.trim();
                 const diff = parseInt(document.getElementById('customDiff').value);
                 const desc = document.getElementById('customDesc').value.trim();
+                const bodyParts = [];
+                const bpIds = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'abs', 'obliques', 'glutes', 'quads', 'hamstrings', 'calves', 'cardio'];
+                bpIds.forEach(bp => {
+                    if (document.getElementById('bp-' + bp).checked) bodyParts.push(bp);
+                });
                 if (!name || isNaN(diff) || diff < 0 || diff > 10) {
                     alert('Please fill all fields correctly.');
                     return;
@@ -564,7 +649,7 @@
                     alert('Exercise already exists.');
                     return;
                 }
-                state.customExercises.push({ name, diff, desc, id });
+                state.customExercises.push({ name, diff, desc, bodyParts, id });
                 store.set('custom_exercises', state.customExercises);
                 router.renderCustom(document.getElementById('app'));
             },
@@ -582,6 +667,15 @@
                         <div class="card">
                             <label class="text-sm text-muted block mb-2">Weight (kg) - For Calories</label>
                             <input type="number" value="${state.settings.weight}" class="btn w-full text-left" onchange="state.settings.weight=this.value; store.set('settings', state.settings)">
+                        </div>
+                        <div class="card">
+                            <label class="text-sm text-muted block mb-2">Workout Focus</label>
+                            <select onchange="state.settings.focus=this.value; store.set('settings', state.settings)" class="btn w-full text-left">
+                                <option value="full body" ${state.settings.focus === 'full body' ? 'selected' : ''}>Full Body</option>
+                                <option value="upper body" ${state.settings.focus === 'upper body' ? 'selected' : ''}>Upper Body</option>
+                                <option value="lower body" ${state.settings.focus === 'lower body' ? 'selected' : ''}>Lower Body</option>
+                                <option value="core" ${state.settings.focus === 'core' ? 'selected' : ''}>Core</option>
+                            </select>
                         </div>
                         <div class="card">
                             <button class="btn btn-danger w-full" onclick="if(confirm('Reset?')){ localStorage.clear(); location.reload(); }">Reset Data</button>
