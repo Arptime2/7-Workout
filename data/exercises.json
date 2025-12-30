@@ -1,0 +1,50 @@
+{
+  "warmupNames": [
+    "Neck Circles", "Arm Circles Forward", "Arm Circles Backward", "Shoulder Shrugs", "Torso Twists",
+    "Hip Circles", "Knee Hugs", "Ankle Rotations", "Jumping Jacks (Slow)", "High Knees (Slow)",
+    "Butt Kicks", "Side Lunges", "Forward Lunges", "Calf Raises", "Wall Sits (Short)",
+    "Cat-Cow Stretch", "Downward Dog", "Child's Pose", "Arm Cross Stretch", "Tricep Stretch",
+    "Wrist Rotations", "Leg Swings"
+  ],
+  "rawExercises": [
+    {"n": "Crunches", "d": 1}, {"n": "Sit-ups", "d": 2}, {"n": "Bicycle Crunches", "d": 3}, {"n": "Plank", "d": 2}, 
+    {"n": "Side Plank Left", "d": 2}, {"n": "Side Plank Right", "d": 2}, {"n": "Leg Raises", "d": 3}, {"n": "Flutter Kicks", "d": 3},
+    {"n": "Russian Twists", "d": 2}, {"n": "Mountain Climbers", "d": 3}, {"n": "V-Ups", "d": 3}, {"n": "Toe Touches", "d": 2},
+    {"n": "Dead Bug", "d": 1}, {"n": "Hollow Body Hold", "d": 3}, {"n": "Bird Dog", "d": 1}, {"n": "Reverse Crunches", "d": 2},
+    {"n": "Hollow Rock", "d": 3}, {"n": "Plank Hip Dips", "d": 2}, {"n": "Heel Taps", "d": 1}, {"n": "Seated Knee Tucks", "d": 2},
+    
+    {"n": "Push-ups", "d": 2}, {"n": "Wide Push-ups", "d": 2}, {"n": "Diamond Push-ups", "d": 3}, {"n": "Incline Push-ups", "d": 1},
+    {"n": "Decline Push-ups", "d": 3}, {"n": "Pike Push-ups", "d": 3}, {"n": "Tricep Dips", "d": 2}, {"n": "Shoulder Taps", "d": 2},
+    {"n": "Spiderman Push-ups", "d": 3}, {"n": "Plank Ups", "d": 3}, {"n": "Inchworms", "d": 2},
+    {"n": "Hindu Push-ups", "d": 3}, {"n": "Archer Push-ups", "d": 3}, {"n": "Pseudo Planche Push-ups", "d": 3},
+    {"n": "Dive Bomber Push-ups", "d": 3}, {"n": "T-Push-ups", "d": 3}, {"n": "Wall Push-ups", "d": 1},
+
+    {"n": "Superman", "d": 1}, {"n": "Reverse Snow Angels", "d": 1}, {"n": "Prone Y-Raises", "d": 1}, {"n": "Scapular Push-ups", "d": 1},
+    {"n": "Doorframe Row", "d": 1}, {"n": "Floor I-Y-T Raises", "d": 2}, {"n": "Crab Reach", "d": 2}, {"n": "Tabletop Lift", "d": 1},
+    
+    {"n": "Squats", "d": 2}, {"n": "Sumo Squats", "d": 2}, {"n": "Jump Squats", "d": 3}, {"n": "Lunges", "d": 2},
+    {"n": "Reverse Lunges", "d": 2}, {"n": "Side Lunges", "d": 2}, {"n": "Curtsy Lunges", "d": 2}, {"n": "Calf Raises", "d": 1},
+    {"n": "Wall Sit", "d": 2}, {"n": "Glute Bridges", "d": 1}, {"n": "Single Leg Glute Bridge", "d": 2}, {"n": "Donkey Kicks", "d": 1},
+    {"n": "Fire Hydrants", "d": 1}, {"n": "Pistol Squat Prep", "d": 3}, {"n": "Bulgarian Split Squat", "d": 3}, {"n": "Step-ups", "d": 2},
+    {"n": "Cossack Squats", "d": 3}, {"n": "Frog Pumps", "d": 1}, {"n": "Static Lunge Hold", "d": 2}, {"n": "Duck Walk", "d": 2},
+    {"n": "Single Leg Deadlift", "d": 2}, {"n": "Prisoner Squats", "d": 2}, {"n": "Kneel to Squat", "d": 2},
+    
+    {"n": "Jumping Jacks", "d": 1}, {"n": "Burpees", "d": 3}, {"n": "High Knees", "d": 2}, {"n": "Butt Kicks", "d": 1},
+    {"n": "Skaters", "d": 2}, {"n": "Jump Rope (Air)", "d": 2}, {"n": "Star Jumps", "d": 3}, {"n": "Tuck Jumps", "d": 3},
+    {"n": "Bear Crawl", "d": 3}, {"n": "Crab Walk", "d": 2}, {"n": "Box Jumps (or Step)", "d": 3}, {"n": "Seal Jacks", "d": 1},
+    {"n": "Frog Jumps", "d": 3}, {"n": "Lunge Knee Hop", "d": 3}, {"n": "Fast Feet", "d": 2}, {"n": "Lateral Hops", "d": 2},
+    {"n": "Split Jumps", "d": 3}, {"n": "Plank Jacks", "d": 3}, {"n": "Squat Thrusts", "d": 3}, {"n": "Kick Throughs", "d": 3},
+    {"n": "Groiners", "d": 2}, {"n": "Broad Jumps", "d": 3}, {"n": "Half Burpees", "d": 2},
+    
+    {"n": "Pulse Squats", "d": 2}, {"n": "Pulse Lunges", "d": 2}, {"n": "Hold Squat", "d": 2}, 
+    {"n": "Side Leg Raises", "d": 1}, {"n": "Inner Thigh Lifts", "d": 1}, {"n": "Heel Touches", "d": 1},
+    {"n": "Cross Body Crunches", "d": 2}, {"n": "Plank Rotations", "d": 2}, {"n": "Knee to Elbow", "d": 2},
+    {"n": "Scissor Kicks", "d": 2}, {"n": "Windshield Wipers", "d": 3}, {"n": "Side Plank Dips", "d": 3},
+    {"n": "Cobra Stretch Push", "d": 1}, {"n": "Floor Tricep Dips", "d": 1}, 
+    {"n": "Wide Squat Pulses", "d": 2}, {"n": "Squat to Lunge", "d": 3}, {"n": "Kneeling Push-ups", "d": 1},
+    {"n": "One Arm Push-up (Wall)", "d": 2}, {"n": "Clapping Push-ups", "d": 3}, 
+    {"n": "Chair Dips", "d": 2}, {"n": "Incline Plank", "d": 1}, {"n": "Decline Plank", "d": 3}, 
+    {"n": "Single Leg Plank", "d": 3}, {"n": "Walking Lunges", "d": 2}, {"n": "Good Mornings", "d": 1}, 
+    {"n": "Reverse Plank", "d": 2}, {"n": "Tabletop Hold", "d": 1}
+  ]
+}
