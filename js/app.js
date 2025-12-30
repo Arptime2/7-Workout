@@ -20,10 +20,13 @@
         };
 
         let state = {
-            workouts: store.get('workouts', []), 
+            workouts: store.get('workouts', []),
             settings: store.get('settings', { weight: 70, difficultyBias: 0 }),
-            exerciseFeedback: store.get('ex_feedback', {}) // { exId: { avgScore: 5, count: 0 } }
+            exerciseFeedback: store.get('ex_feedback', {}), // { exId: { avgScore: 5, count: 0 } }
+            customExercises: store.get('custom_exercises', [])
         };
+
+                exercises.push(...state.customExercises);
 
         // --- CHARTING ENGINE ---
         class Chart {
@@ -168,10 +171,11 @@
                 else if (view === 'stats') router.renderStats(app);
                 else if (view === 'algo') router.renderAlgo(app);
                 else if (view === 'library') router.renderLibrary(app);
+                else if (view === 'custom') router.renderCustom(app);
                 else if (view === 'settings') router.renderSettings(app);
                 
                 // Nav UI
-                const navMap = { 'home':0, 'library':1, 'stats':2, 'algo':3, 'settings':4 };
+                const navMap = { 'home':0, 'library':1, 'stats':2, 'algo':3, 'custom':4, 'settings':5 };
                 if(navMap[view] !== undefined) document.querySelectorAll('.nav-item')[navMap[view]].classList.add('active');
                 
                 document.getElementById('mainNav').style.display = view === 'workout' ? 'none' : 'flex';
@@ -514,6 +518,61 @@
                         </div>
                     </div>
                 `;
+            },
+
+            renderCustom: (container) => {
+                container.innerHTML = `
+                    <div class="scroll-container">
+                        <h1 class="text-2xl mb-4">Add Custom Exercise</h1>
+                        <div class="card">
+                            <label class="text-sm text-muted block mb-2">Exercise Name</label>
+                            <input type="text" id="customName" class="btn w-full text-left" placeholder="e.g., Custom Push-up">
+                        </div>
+                        <div class="card">
+                            <label class="text-sm text-muted block mb-2">Difficulty (0-10)</label>
+                            <input type="number" id="customDiff" class="btn w-full text-left" min="0" max="10" value="5">
+                        </div>
+                        <div class="card">
+                            <label class="text-sm text-muted block mb-2">Description</label>
+                            <textarea id="customDesc" class="btn w-full text-left" rows="3" placeholder="Describe how to perform the exercise"></textarea>
+                        </div>
+                        <button class="btn btn-primary btn-lg w-full mt-4" onclick="router.addCustomExercise()">Add Exercise</button>
+                        <h3 class="text-xl mt-4 mb-2">Your Custom Exercises</h3>
+                        ${state.customExercises.map(e => `
+                            <div class="card flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold">${e.name}</div>
+                                    <div class="text-sm text-muted">${e.diff}/10</div>
+                                </div>
+                                <button class="btn btn-danger" onclick="router.deleteCustomExercise('${e.id}')">Delete</button>
+                            </div>
+                        `).join('') || '<p class="text-muted">No custom exercises yet.</p>'}
+                    </div>
+                `;
+            },
+
+            addCustomExercise: () => {
+                const name = document.getElementById('customName').value.trim();
+                const diff = parseInt(document.getElementById('customDiff').value);
+                const desc = document.getElementById('customDesc').value.trim();
+                if (!name || isNaN(diff) || diff < 0 || diff > 10) {
+                    alert('Please fill all fields correctly.');
+                    return;
+                }
+                const id = name.replace(/\s/g, '').toLowerCase();
+                if (state.customExercises.some(e => e.id === id)) {
+                    alert('Exercise already exists.');
+                    return;
+                }
+                state.customExercises.push({ name, diff, desc, id });
+                store.set('custom_exercises', state.customExercises);
+                router.renderCustom(document.getElementById('app'));
+            },
+
+            deleteCustomExercise: (id) => {
+                state.customExercises = state.customExercises.filter(e => e.id !== id);
+                store.set('custom_exercises', state.customExercises);
+                router.renderCustom(document.getElementById('app'));
             },
 
             renderSettings: (container) => {
