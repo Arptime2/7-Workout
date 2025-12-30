@@ -1,61 +1,12 @@
-        // --- DATA & DESC GENERATOR ---
-        // Description helper: Maps keywords to detailed beginner instructions
-        const getDesc = (n) => {
-            const name = n.toLowerCase();
-
-            // Map common patterns to detailed explanations
-            const descMap = {
-                'squat': "Stand feet shoulder-width. Lower hips back and down like sitting in a chair, keeping chest up. Drive through heels to stand.",
-                'push-up': "Plank position, hands under shoulders. Lower chest to floor keeping body straight. Push back up fully.",
-                'plank': "Rest on forearms and toes. Keep body in a straight line from head to heels. Squeeze glutes and abs. Don't let hips sag.",
-                'lunge': "Step one leg forward. Lower hips until both knees are 90 degrees. Back knee hovers off floor. Push off front foot to return.",
-                'crunch': "Lie on back, knees bent. Hands behind head. Lift only shoulders off floor using abs. Lower slowly.",
-                'sit-up': "Lie on back, knees bent, feet anchored. Lift entire torso up to knees. Lower back down with control.",
-                'jumping jack': "Start standing. Jump feet wide while clapping hands overhead. Jump feet back together while lowering arms.",
-                'high knees': "Run in place, driving knees up towards chest as high as possible. Pump arms.",
-                'burpee': "Stand. Drop to squat. Kick feet back to plank. Drop chest to floor. Jump feet in. Jump up high.",
-                'mountain climber': "Plank position. Quickly drive one knee to chest, then switch legs explosively, like running horizontally.",
-                'leg raise': "Lie on back, hands under glutes. Lift legs straight up to 90 degrees. Lower slowly without touching floor.",
-                'bridge': "Lie on back, knees bent. Lift hips toward ceiling until body is straight line from shoulders to knees. Squeeze glutes.",
-                'dip': "Sit on floor or edge of chair, hands behind you. Lift hips. Bend elbows to lower body, then push back up.",
-                'calf raise': "Stand tall. Lift heels off ground as high as possible. Lower slowly.",
-                'wall sit': "Lean back against wall. Slide down until thighs are parallel to floor. Hold.",
-                'superman': "Lie on stomach, arms extended forward. Lift arms and legs off floor simultaneously. Hold, then lower.",
-                'dead bug': "Lie on back, arms and legs in air. Lower opposite arm and leg towards floor. Return to center. Switch.",
-                'flutter kick': "Lie on back, legs straight. Lift heels slightly. Kick legs up and down in small, rapid motions.",
-                'russian twist': "Sit, lean back slightly, feet off floor. Twist torso touching floor on left, then right side.",
-                'bear crawl': "On hands and toes, knees hovering 1 inch off floor. Crawl forward moving opposite arm and leg.",
-                'inchworm': "Stand. Hinge at hips to touch floor. Walk hands out to plank. Walk hands back to feet. Stand up.",
-                'bird dog': "On hands and knees. Extend opposite arm and leg straight out. Hold. Return. Switch sides.",
-                'bicycle': "Lie on back. Hands behind head. Touch elbow to opposite knee while extending other leg. Alternate.",
-                'skater': "Leap laterally to the right, landing on right foot, left leg behind. Leap to left. Swing arms.",
-                'hollow body': "Lie on back. Lift shoulders and legs slightly off floor. Press lower back into ground. Hold.",
-                'v-up': "Lie on back. Lift legs and torso simultaneously to touch toes, forming a V shape."
-            };
-
-            for (const [key, desc] of Object.entries(descMap)) {
-                if (name.includes(key)) return desc;
-            }
-
-            // Fallback for specific variations
-            if(name.includes('side plank')) return "Lie on side, weight on forearm. Lift hips to form straight line. Hold.";
-            if(name.includes('circle')) return "Rotate the joint in large, controlled circles.";
-            if(name.includes('pulse')) return "Perform small, partial repetitions at the hardest part of the movement.";
-            if(name.includes('hold')) return "Get into position and maintain it without moving.";
-            if(name.includes('jump')) return "Explosive movement. Push off hard to leave the ground, land softly.";
-
-            return "Perform the movement with control, focusing on good form and muscle engagement.";
-        };
-
         fetch('data/exercises.json')
             .then(response => response.json())
             .then(data => {
-                const warmups = data.warmupNames.map(n => ({ name: n, diff: 1, desc: getDesc(n), id: n.replace(/\s/g, '').toLowerCase() }));
+                const warmups = data.warmupNames.map(w => ({ name: w.name, diff: 1, desc: w.desc, id: w.name.replace(/\s/g, '').toLowerCase() }));
                 const rawExercises = data.rawExercises;
                 const exercises = rawExercises.map(e => ({
                     name: e.n,
                     diff: e.d,
-                    desc: getDesc(e.n),
+                    desc: e.desc,
                     id: e.n.replace(/\s/g, '').toLowerCase()
                 }));
 
