@@ -102,47 +102,30 @@
                 }
 
                 // Exercises Logic
-                // 1. Determine Target Difficulty based on global bias
-                let targetDiff = 2;
-                if(bias > 1) targetDiff = 3; // Hard day
-                if(bias < -0.5) targetDiff = 1; // Easy day
+                // 1. Determine Target Difficulty based on global bias (0-10 scale)
+                let targetDiff = Math.max(0, Math.min(10, 5 + bias * 2));
 
-                // 2. Filter and Weight exercises based on INDIVIDUAL FEEDBACK
+                // 2. Filter exercises based on closeness to target difficulty
                 let pool = exercises.filter(e => {
                     const fb = state.exerciseFeedback[e.id];
-                    
-                    // Effective Difficulty Calculation
-                    let effectiveDiff = e.diff;
-                    
+                    let effectiveDiff = e.d;
                     if (fb) {
-                        // If user rated it > 8 (Very Hard), increase effective difficulty
-                        if (fb.avgScore >= 8) effectiveDiff += 1;
-                        // If user rated it < 3 (Very Easy), decrease effective difficulty
-                        if (fb.avgScore <= 3) effectiveDiff -= 1;
+                        if (fb.avgScore >= 8) effectiveDiff += 2;
+                        if (fb.avgScore <= 3) effectiveDiff -= 2;
                     }
-
-                    // Strict filtering for "Recovery" days (targetDiff 1)
-                    // If effective difficulty is high, skip it
-                    if (targetDiff === 1 && effectiveDiff >= 3) return false;
-
-                    // Filtering for "Hard" days (targetDiff 3)
-                    // If effective difficulty is very low, skip it
-                    if (targetDiff === 3 && effectiveDiff <= 1) return false;
-
-                    return true;
+                    effectiveDiff = Math.max(0, Math.min(10, effectiveDiff));
+                    return Math.abs(effectiveDiff - targetDiff) <= 3;
                 });
-                
+
                 // 3. Sort by closeness to target
                 pool.sort((a,b) => {
-                    // Re-calculate effective diff for sorting
                     const getEff = (ex) => {
                         const fb = state.exerciseFeedback[ex.id];
-                        let eff = ex.diff;
-                        if(fb && fb.avgScore >= 8) eff += 1;
-                        if(fb && fb.avgScore <= 3) eff -= 1;
-                        return eff;
+                        let eff = ex.d;
+                        if(fb && fb.avgScore >= 8) eff += 2;
+                        if(fb && fb.avgScore <= 3) eff -= 2;
+                        return Math.max(0, Math.min(10, eff));
                     };
-
                     const distA = Math.abs(getEff(a) - targetDiff) + Math.random();
                     const distB = Math.abs(getEff(b) - targetDiff) + Math.random();
                     return distA - distB;
@@ -213,8 +196,8 @@
                                 <div class="text-sm text-muted">Kcal Burned</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-xl">${Math.round((bias+2)*25)}%</div>
-                                <div class="text-sm text-muted">Intensity</div>
+                                <div class="text-xl">${Math.max(0, Math.min(10, Math.round(5 + bias * 2)))}/10</div>
+                                <div class="text-sm text-muted">Difficulty Level</div>
                             </div>
                         </div>
 
@@ -513,8 +496,8 @@
                     <div class="list-item">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-bold">${e.name}</span>
-                            <span class="tag ${e.diff===1?'tag-easy':(e.diff===2?'tag-med':'tag-hard')}">
-                                ${e.diff===1?'Easy':(e.diff===2?'Medium':'Hard')}
+                            <span class="tag ${e.diff <= 3 ? 'tag-easy' : (e.diff <= 6 ? 'tag-med' : 'tag-hard')}">
+                                ${e.diff}/10
                             </span>
                         </div>
                         <p class="text-xs text-muted">${e.desc}</p>
