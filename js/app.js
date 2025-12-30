@@ -11,6 +11,7 @@
                     diff: e.d,
                     desc: e.desc,
                     bodyParts: e.bodyParts || [],
+                    met: e.met || 6,
                     id: e.n.replace(/\s/g, '').toLowerCase()
                 }));
 
@@ -477,9 +478,17 @@
             saveWorkout: (rpe) => {
                 const userWeight = state.settings.weight;
                 const rpeVal = parseInt(rpe);
-                const estimatedMET = 3 + (rpeVal / 2);
-                const durationHrs = 10 / 60; 
-                const cals = Math.round(estimatedMET * userWeight * durationHrs);
+                const totalTimeSec = router.activeWorkout.totalTime;
+                const totalTimeHrs = totalTimeSec / 3600;
+                const exercises = router.activeWorkout.main.concat(router.activeWorkout.warmups.map(w => ({...w, met: 4})));
+                const totalMETWeighted = exercises.reduce((sum, ex) => {
+                    const timeSec = router.activeWorkout.main.includes(ex) ? 40 : 30;
+                    return sum + (ex.met * timeSec);
+                }, 0);
+                const avgMET = totalMETWeighted / totalTimeSec;
+                const intensityFactor = rpeVal / 5;
+                const effectiveMET = avgMET * intensityFactor;
+                const cals = Math.round(effectiveMET * userWeight * totalTimeHrs);
 
                 const w = {
                     date: Date.now(),
@@ -541,6 +550,16 @@
                                  <li class="mb-2"><strong>Full Body:</strong> Selects 4 upper body (chest/back/shoulders), 4 lower body (legs/glutes), 2 core (abs/obliques), and 2 cardio exercises for balanced training.</li>
                                  <li class="mb-2"><strong>Specific Focus:</strong> Filters exercises to target only the selected body area (e.g., Upper Body focuses on push/pull movements).</li>
                                  <li class="mb-2"><strong>Adaptive Selection:</strong> Within each group, exercises are chosen based on your difficulty level and personal feedback for optimal progression.</li>
+                             </ul>
+                         </div>
+
+                         <div class="card">
+                             <h3 class="text-xl mb-2 text-primary">4. Calorie Calculation</h3>
+                             <p class="text-sm text-muted mb-4">Calories burned are calculated using exercise-specific MET values, adjusted for your RPE intensity rating, workout duration, and weight.</p>
+                             <ul class="text-sm text-muted" style="padding-left:16px;">
+                                 <li class="mb-2"><strong>MET Values:</strong> Each exercise has a Metabolic Equivalent of Task value (e.g., push-ups: 8, planks: 3, cardio: 10) based on energy expenditure.</li>
+                                 <li class="mb-2"><strong>Intensity Adjustment:</strong> Your RPE rating scales the MET (RPE 5 = 100%, higher RPE increases burn).</li>
+                                 <li class="mb-2"><strong>Duration & Weight:</strong> Uses actual workout time and your entered weight for precise calculation.</li>
                              </ul>
                          </div>
 
@@ -649,7 +668,7 @@
                     alert('Exercise already exists.');
                     return;
                 }
-                state.customExercises.push({ name, diff, desc, bodyParts, id });
+                state.customExercises.push({ name, diff, desc, bodyParts, met: 6, id });
                 store.set('custom_exercises', state.customExercises);
                 router.renderCustom(document.getElementById('app'));
             },
