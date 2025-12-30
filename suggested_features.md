@@ -161,3 +161,11 @@
 ### 10. Performance Metrics
 - Incorporate heart rate data if available for more accurate RPE estimation.
 - Real-time adjustment during workouts based on performance (e.g., if exercises are completed faster, increase difficulty).
+
+
+
+
+
+Add neural network instead of algorythm
+
+should optimize: ???
