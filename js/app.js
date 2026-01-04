@@ -1,6 +1,10 @@
 let allExercises = [];
 let warmupExercises = [];
 
+// Save-Server Configuration
+const SERVER_URL = 'http://localhost:5566';
+const PROJECT_NAME = '7workout';
+
 const exerciseLoader = {
     loadAll: async () => {
         try {
@@ -1212,11 +1216,106 @@ const router = {
                     <label class="text-sm text-muted block mb-2">Weight (kg) - For Calorie Calculation</label>
                     <input type="number" value="${state.settings.weight}" class="btn w-full text-left" onchange="state.settings.weight=parseFloat(this.value); store.set('settings', state.settings)">
                 </div>
+                
+                <div class="card">
+                    <h3 class="text-sm text-muted uppercase mb-2">Cloud Sync</h3>
+                    <p class="text-xs text-muted mb-3">Connect to your local Save-Server to backup and sync your data.</p>
+                    <div class="flex gap-2">
+                        <button class="btn btn-primary flex-1" onclick="router.saveToServer()">
+                            Save to Server
+                        </button>
+                        <button class="btn flex-1" style="background: var(--accent); border-color: var(--accent); color: white;" onclick="router.syncFromServer()">
+                            Sync from Server
+                        </button>
+                    </div>
+                    <p id="syncStatus" class="text-xs text-muted mt-2 text-center"></p>
+                </div>
+                
                 <div class="card">
                     <button class="btn btn-danger w-full" onclick="if(confirm('Reset all data including workouts, custom exercises, and settings?')){ localStorage.clear(); location.reload(); }">Reset All Data</button>
                 </div>
             </div>
         `;
+    },
+    
+    saveToServer: async () => {
+        const statusEl = document.getElementById('syncStatus');
+        statusEl.innerText = 'Saving...';
+        statusEl.style.color = 'var(--primary)';
+        
+        const dataToSave = {
+            workouts: state.workouts,
+            settings: state.settings,
+            exerciseFeedback: state.exerciseFeedback,
+            customExercises: state.customExercises,
+            filters: state.filters,
+            lastSync: new Date().toISOString()
+        };
+        
+        try {
+            const result = await saveData(PROJECT_NAME, 'appData', dataToSave);
+            statusEl.innerText = 'Saved successfully!';
+            statusEl.style.color = 'var(--accent)';
+        } catch (error) {
+            statusEl.innerText = 'Error: ' + error.message;
+            statusEl.style.color = 'var(--danger)';
+        }
+    },
+    
+    syncFromServer: async () => {
+        if (!confirm('This will overwrite your local data with data from the server. Continue?')) {
+            return;
+        }
+        
+        const statusEl = document.getElementById('syncStatus');
+        statusEl.innerText = 'Syncing...';
+        statusEl.style.color = 'var(--primary)';
+        
+        try {
+            const data = await getData(PROJECT_NAME);
+            const appData = data.files.find(f => f.filename === 'appData');
+            
+            if (!appData) {
+                statusEl.innerText = 'No saved data found on server';
+                statusEl.style.color = 'var(--danger)';
+                return;
+            }
+            
+            const d = appData.data;
+            
+            // Merge server data with local storage
+            if (d.workouts) state.workouts = d.workouts;
+            if (d.settings) {
+                state.settings = { ...state.settings, ...d.settings };
+                store.set('settings', state.settings);
+            }
+            if (d.exerciseFeedback) {
+                state.exerciseFeedback = d.exerciseFeedback;
+                store.set('ex_feedback', state.exerciseFeedback);
+            }
+            if (d.customExercises) {
+                state.customExercises = d.customExercises;
+                store.set('custom_exercises', state.customExercises);
+                
+                // Update allExercises with custom exercises
+                state.customExercises.forEach(ex => {
+                    if (!allExercises.find(e => e.id === ex.id)) {
+                        allExercises.push(ex);
+                        if (ex.warmup) warmupExercises.push(ex);
+                    }
+                });
+            }
+            if (d.filters) {
+                state.filters = { ...state.filters, ...d.filters };
+                store.set('filters', state.filters);
+            }
+            
+            statusEl.innerText = `Synced! Last backup: ${new Date(d.lastSync).toLocaleString()}`;
+            statusEl.style.color = 'var(--accent)';
+        } catch (error) {
+            statusEl.innerText = 'Error: ' + error.message;
+            statusEl.style.color = 'var(--danger)';
+        }
     }
 };
 

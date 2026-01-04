@@ -28,28 +28,29 @@
         /* Utilities */
         .hidden { visibility: hidden; opacity: 0; pointer-events: none; }
         .visible { visibility: visible; opacity: 1; pointer-events: auto; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .justify-center { justify-content: center; }
-        .w-full { width: 100%; }
-        .h-full { height: 100%; }
-        .p-4 { padding: 1rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mt-4 { margin-top: 1rem; }
-        .text-center { text-align: center; }
-        .text-xl { font-size: 1.25rem; font-weight: bold; }
-        .text-2xl { font-size: 1.5rem; font-weight: bold; }
-        .text-sm { font-size: 0.875rem; }
-        .text-xs { font-size: 0.75rem; }
-        .text-muted { color: var(--text-muted); }
-        .text-primary { color: var(--primary); }
-        .text-accent { color: var(--accent); }
-        .font-bold { font-weight: 700; }
-        .uppercase { text-transform: uppercase; letter-spacing: 0.05em; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.p-4 { padding: 1rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.text-center { text-align: center; }
+.text-xl { font-size: 1.25rem; font-weight: bold; }
+.text-2xl { font-size: 1.5rem; font-weight: bold; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--primary); }
+.text-accent { color: var(--accent); }
+.font-bold { font-weight: 700; }
+.uppercase { text-transform: uppercase; letter-spacing: 0.05em; }
+.gap-2 { gap: 0.5rem; }
 
         /* Components */
         .btn {
