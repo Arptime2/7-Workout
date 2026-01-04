@@ -17,5 +17,6 @@
   ],
   "category": "plyometrics",
   "difficulty": 6,
-  "quiet": true
+  "quiet": true,
+  "warmup": false
 }

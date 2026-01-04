@@ -192,6 +192,22 @@
 .tag-easy { color: var(--accent); }
 .tag-med { color: var(--primary); }
 .tag-hard { color: var(--danger); }
+.tag-warmup { 
+    color: #f59e0b; 
+    background: rgba(245, 158, 11, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+.tag-custom { 
+    color: #8b5cf6; 
+    background: rgba(139, 92, 246, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: bold;
+}
 
 /* Grid utilities */
 .grid { display: grid; }
@@ -215,4 +231,159 @@
 .body-part-option.selected {
     background: var(--primary);
     color: white;
+}
+
+.filter-container {
+    padding-bottom: 120px;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+}
+
+.filter-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.select-all-btn {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.select-all-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 16px;
+    background: var(--card-border);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    user-select: none;
+    border: 1px solid transparent;
+}
+
+.filter-option input {
+    display: none;
+}
+
+.filter-option.selected {
+    background: var(--primary);
+    border-color: var(--primary-dim);
+}
+
+.filter-actions {
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(to top, var(--bg) 80%, transparent);
+}
+
+.filter-count-display {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px;
+    background: var(--card);
+    border-radius: 8px;
+    margin-bottom: 80px;
+    border: 1px solid var(--card-border);
+}
+
+.filter-count-display .count-main,
+.filter-count-display .count-warmup,
+.filter-count-display .count-total {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.filter-count-display .count-warmup {
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+.filter-count-display .count-total {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.filter-actions .btn {
+    flex: 1;
+}
+
+.exercise-image-container {
+    width: 100%;
+    max-width: 300px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+}
+
+.exercise-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.exercise-image:hover {
+    transform: scale(1.02);
+}
+
+.image-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--card-border);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dot.active {
+    background: var(--primary);
 }

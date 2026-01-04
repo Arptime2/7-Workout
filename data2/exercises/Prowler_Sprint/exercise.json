@@ -20,5 +20,6 @@
   ],
   "category": "cardio",
   "difficulty": 3,
-  "quiet": false
+  "quiet": false,
+  "warmup": false
 }
