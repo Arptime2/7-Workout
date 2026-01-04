@@ -21,6 +21,6 @@
   ],
   "category": "strength",
   "difficulty": 9,
-  "quiet": false,
+  "quiet": true,
   "warmup": false
 }

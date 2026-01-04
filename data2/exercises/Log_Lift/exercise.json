@@ -24,6 +24,6 @@
   ],
   "category": "strongman",
   "difficulty": 6,
-  "quiet": false,
+  "quiet": true,
   "warmup": false
 }

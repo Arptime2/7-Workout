@@ -15,6 +15,6 @@
   "instructions": [],
   "category": "strength",
   "difficulty": 6,
-  "quiet": false,
+  "quiet": true,
   "warmup": true
 }

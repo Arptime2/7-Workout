@@ -14,6 +14,6 @@
   ],
   "category": "stretching",
   "difficulty": 6,
-  "quiet": false,
+  "quiet": true,
   "warmup": true
 }
