@@ -1273,11 +1273,13 @@ const router = {
         
         try {
             const data = await getData(PROJECT_NAME);
-            const appData = data.files.find(f => f.filename === 'appData');
+            // Find file with 'appData' in name (with or without .json extension)
+            const appData = data.files.find(f => f.filename && f.filename.includes('appData'));
             
             if (!appData) {
                 statusEl.innerText = 'No saved data found on server';
                 statusEl.style.color = 'var(--danger)';
+                console.log('Server response:', data);
                 return;
             }
             
@@ -1315,6 +1317,7 @@ const router = {
         } catch (error) {
             statusEl.innerText = 'Error: ' + error.message;
             statusEl.style.color = 'var(--danger)';
+            console.error('Sync error:', error);
         }
     }
 };
