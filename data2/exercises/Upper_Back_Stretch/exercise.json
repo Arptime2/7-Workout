@@ -1,0 +1,18 @@
+{
+  "name": "Upper Back Stretch",
+  "force": "static",
+  "mechanic": null,
+  "equipment": null,
+  "primaryMuscles": [
+    "middle back"
+  ],
+  "secondaryMuscles": [
+    "middle back"
+  ],
+  "instructions": [
+    "Clasp fingers together with your thumbs pointing down, round your shoulders as you reach your hands forward."
+  ],
+  "category": "stretching",
+  "difficulty": 3,
+  "quiet": true
+}

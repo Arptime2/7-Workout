@@ -1,0 +1,17 @@
+{
+  "name": "Side Neck Stretch",
+  "force": "static",
+  "mechanic": "isolation",
+  "equipment": null,
+  "primaryMuscles": [
+    "neck"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+    "Start with your shoulders relaxed, gently tilt your head towards your shoulder.",
+    "Assist stretch with a gentle pull on the side of the head."
+  ],
+  "category": "stretching",
+  "difficulty": 3,
+  "quiet": true
+}

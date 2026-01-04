@@ -1,0 +1,1 @@
+Data cloned from https://github.com/wrkout/exercises.json with all 873 exercises modified to add a numerical difficulty rating (1-10) and a quiet boolean field indicating exercises without jumping or loud activity.

@@ -1,0 +1,20 @@
+{
+  "name": "Bicycling",
+  "force": null,
+  "mechanic": null,
+  "equipment": "other",
+  "primaryMuscles": [
+    "quadriceps"
+  ],
+  "secondaryMuscles": [
+    "calves",
+    "glutes",
+    "hamstrings"
+  ],
+  "instructions": [
+    "To begin, seat yourself on the bike and adjust the seat to your height."
+  ],
+  "category": "cardio",
+  "difficulty": 3,
+  "quiet": true
+}
