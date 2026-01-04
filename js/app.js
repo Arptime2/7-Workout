@@ -1274,19 +1274,15 @@ const router = {
         try {
             const data = await getData(PROJECT_NAME);
             
-            // Debug: show server response
-            alert('Server response: ' + JSON.stringify(data, null, 2));
+            // Server returns { files: [ { workout data directly }, ... ] }
+            // Not { files: [ { filename: 'x', data: { ... } }, ... ] }
+            const d = data.files && data.files[0] ? data.files[0] : null;
             
-            // Find file with 'appData' in name (with or without .json extension)
-            const appData = data.files ? data.files.find(f => f.filename && f.filename.includes('appData')) : null;
-            
-            if (!appData) {
+            if (!d) {
                 statusEl.innerText = 'No saved data found on server';
                 statusEl.style.color = 'var(--danger)';
                 return;
             }
-            
-            const d = appData.data;
             
             // Merge server data with local storage
             if (d.workouts) state.workouts = d.workouts;
@@ -1315,12 +1311,11 @@ const router = {
                 store.set('filters', state.filters);
             }
             
-            statusEl.innerText = `Synced! Last backup: ${new Date(d.lastSync).toLocaleString()}`;
+            statusEl.innerText = `Synced! Last backup: ${d.lastSync ? new Date(d.lastSync).toLocaleString() : 'Unknown'}`;
             statusEl.style.color = 'var(--accent)';
         } catch (error) {
             statusEl.innerText = 'Error: ' + error.message;
             statusEl.style.color = 'var(--danger)';
-            alert('Sync error: ' + error.message);
         }
     }
 };
