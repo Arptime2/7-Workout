@@ -1,47 +1,16 @@
-let allExercises = [];
-let warmupExercises = [];
-
-// Save-Server Configuration
 const SERVER_URL = 'http://localhost:5566';
 const PROJECT_NAME = '7workout';
 
-const exerciseLoader = {
-    loadAll: async () => {
-        try {
-            const response = await fetch('data2/exercises/index.json');
-            if (!response.ok) throw new Error('Failed to load exercises index');
-            const dirs = await response.json();
-            
-            const exercisePromises = dirs.map(async (dir) => {
-                try {
-                    const exResponse = await fetch(`data2/exercises/${dir.name}/exercise.json`);
-                    if (!exResponse.ok) return null;
-                    const exercise = await exResponse.json();
-                    exercise.id = dir.name;
-                    return exercise;
-                } catch (e) {
-                    return null;
-                }
-            });
-            
-            const loaded = await Promise.all(exercisePromises);
-            allExercises = loaded.filter(e => e !== null);
-            
-            warmupExercises = allExercises.filter(e => e.warmup === true);
-            
-        } catch (error) {
-            console.error('Error loading exercises:', error);
-            allExercises = [];
-            warmupExercises = [
-                { name: "Neck Circles", desc: "Rotate your neck in large circles.", difficulty: 1, id: "neck-circles", warmup: true, met: 2, quiet: true, category: 'stretching', primaryMuscles: ['neck'] },
-                { name: "Arm Circles", desc: "Swing arms in circles.", difficulty: 1, id: "arm-circles", warmup: true, met: 2, quiet: true, category: 'stretching', primaryMuscles: ['shoulders'] },
-                { name: "Shoulder Shrugs", desc: "Lift and drop shoulders.", difficulty: 1, id: "shoulder-shrugs", warmup: true, met: 2, quiet: true, category: 'stretching', primaryMuscles: ['traps'] },
-                { name: "Torso Twists", desc: "Twist side to side.", difficulty: 1, id: "torso-twists", warmup: true, met: 2, quiet: true, category: 'stretching', primaryMuscles: ['obliques'] },
-                { name: "Wrist Rotations", desc: "Rotate wrists.", difficulty: 1, id: "wrist-rotations", warmup: true, met: 1, quiet: true, category: 'stretching', primaryMuscles: ['forearms'] }
-            ];
-        }
-    }
-};
+let exercises = [];
+let warmups = [];
+let currentWorkout = null;
+let timer = null;
+let timeLeft = 0;
+let phase = 'warmup';
+let exerciseIndex = 0;
+let isPaused = false;
+let currentDifficulty = 5;
+let currentImageIndex = 0;
 
 const store = {
     get: (key, def) => JSON.parse(localStorage.getItem(key) || JSON.stringify(def)),
@@ -49,1190 +18,681 @@ const store = {
 };
 
 let state = {
-    workouts: store.get('workouts', []),
-    settings: store.get('settings', { weight: 70, difficultyBias: 0 }),
-    exerciseFeedback: store.get('ex_feedback', {}),
-    customExercises: store.get('custom_exercises', []),
-    filters: store.get('filters', null)
+    settings: store.get('settings', { difficulty: 5 }),
+    filters: { primaryMuscles: [], secondaryMuscles: [], force: [], equipment: [], mechanic: [], category: [], quiet: [], partner: [] },
+    exerciseFeedback: store.get('exerciseFeedback', {})
 };
 
-if (!state.filters) {
-    state.filters = {
-        force: [],
-        mechanic: [],
-        equipment: [],
-        primaryMuscles: [],
-        secondaryMuscles: [],
-        category: [],
-        quiet: []
+try {
+    const saved = JSON.parse(localStorage.getItem('filters'));
+    if (saved) {
+        state.filters.primaryMuscles = saved.primaryMuscles || [];
+        state.filters.secondaryMuscles = saved.secondaryMuscles || [];
+        state.filters.force = saved.force || [];
+        state.filters.equipment = saved.equipment || [];
+        state.filters.mechanic = saved.mechanic || [];
+        state.filters.category = saved.category || [];
+        state.filters.quiet = saved.quiet || [];
+        state.filters.partner = saved.partner || [];
+    }
+} catch (e) {}
+
+const loadExercises = async () => {
+    try {
+        const response = await fetch('data2/exercises/index.json');
+        const dirs = await response.json();
+        
+        const exercisePromises = dirs.map(async (dir) => {
+            try {
+                const exResponse = await fetch(`data2/exercises/${dir.name}/exercise.json`);
+                if (!exResponse.ok) return null;
+                const exercise = await exResponse.json();
+                return {
+                    name: exercise.name,
+                    difficulty: exercise.difficulty || 5,
+                    description: exercise.instructions ? exercise.instructions.join(' ') : '',
+                    bodyParts: [...(exercise.primaryMuscles || []), ...(exercise.secondaryMuscles || [])],
+                    primaryMuscles: exercise.primaryMuscles || [],
+                    secondaryMuscles: exercise.secondaryMuscles || [],
+                    partner: exercise.partner === true,
+                    force: exercise.force || 'push',
+                    equipment: exercise.equipment || 'body only',
+                    mechanic: exercise.mechanic || 'compound',
+                    category: exercise.category || 'strength',
+                    quiet: exercise.quiet !== false,
+                    warmup: exercise.warmup === true,
+                    id: dir.name,
+                    type: exercise.warmup === true ? 'warmup' : 'exercise'
+                };
+            } catch (e) {
+                return null;
+            }
+        });
+        
+        const loaded = await Promise.all(exercisePromises);
+        const allLoaded = loaded.filter(e => e !== null);
+        
+        warmups = allLoaded.filter(e => e.type === 'warmup');
+        exercises = allLoaded.filter(e => e.type === 'exercise');
+        
+        console.log(`Loaded: ${allLoaded.length} total, ${warmups.length} warmups, ${exercises.length} exercises`);
+        
+    } catch (e) {
+        console.error('Error loading exercises:', e);
+        warmups = [];
+        exercises = [];
+    }
+};
+
+const getFilterOptions = () => {
+    const primaryMusclesSet = new Set();
+    const secondaryMusclesSet = new Set();
+    const forceSet = new Set();
+    const equipmentSet = new Set();
+    const mechanicSet = new Set();
+    const categorySet = new Set();
+    
+    (exercises || []).forEach(e => {
+        (e.primaryMuscles || []).forEach(p => primaryMusclesSet.add(p));
+        (e.secondaryMuscles || []). forEach(p => secondaryMusclesSet.add(p));
+        if (e.force) forceSet.add(e.force);
+        if (e.equipment) equipmentSet.add(e.equipment);
+        if (e.mechanic) mechanicSet.add(e.mechanic);
+        if (e.category) categorySet.add(e.category);
+    });
+    
+    return {
+        primaryMuscles: Array.from(primaryMusclesSet).sort(),
+        secondaryMuscles: Array.from(secondaryMusclesSet).sort(),
+        force: Array.from(forceSet).sort(),
+        equipment: Array.from(equipmentSet).sort(),
+        mechanic: Array.from(mechanicSet).sort(),
+        category: Array.from(categorySet).sort()
     };
-} else {
-    if (!state.filters.force) state.filters.force = [];
-    if (!state.filters.mechanic) state.filters.mechanic = [];
-    if (!state.filters.equipment) state.filters.equipment = [];
-    if (!state.filters.primaryMuscles) state.filters.primaryMuscles = [];
-    if (!state.filters.secondaryMuscles) state.filters.secondaryMuscles = [];
-    if (!state.filters.category) state.filters.category = [];
-    if (!state.filters.quiet) state.filters.quiet = [];
-}
+};
 
-class Chart {
-    static draw(canvasId, dataPoints, color) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width = canvas.parentElement.offsetWidth;
-        const h = canvas.height = 200;
-        
-        ctx.clearRect(0,0,w,h);
-        
-        if(dataPoints.length < 2) {
-            ctx.fillStyle = "#6b7280";
-            ctx.font = "14px sans-serif";
-            ctx.fillText("Complete more workouts", w/2 - 70, h/2);
-            return;
-        }
-
-        const max = Math.max(...dataPoints);
-        const min = Math.min(...dataPoints) * 0.9;
-        const range = max - min || 1;
-        const stepX = w / (dataPoints.length - 1);
-
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
-        dataPoints.forEach((val, i) => {
-            const x = i * stepX;
-            const y = h - ((val - min) / range) * (h - 40) - 20;
-            if(i===0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-
-        ctx.lineTo(w, h);
-        ctx.lineTo(0, h);
-        ctx.fillStyle = color + "20"; 
-        ctx.fill();
-
-        ctx.fillStyle = "#fff";
-        dataPoints.forEach((val, i) => {
-            const x = i * stepX;
-            const y = h - ((val - min) / range) * (h - 40) - 20;
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fill();
-        });
+const countAvailableExercises = () => {
+    if (!exercises || exercises.length === 0) {
+        return 0;
     }
-}
-
-const Logic = {
-    analyzeUser: () => {
-        const recent = state.workouts.slice(-5);
-        if(recent.length === 0) return 0;
+    
+    let count = 0;
+    exercises.forEach(e => {
+        if (e.warmup) return;
         
-        const avgRpe = recent.reduce((acc, w) => acc + w.rpe, 0) / recent.length;
-        let bias = state.settings.difficultyBias;
-
-        if (avgRpe > 8) bias -= 0.5; 
-        else if (avgRpe < 5) bias += 0.5; 
-        else bias += 0.1;
-
-        return Math.max(-1.5, Math.min(2.5, bias));
-    },
-
-    getEffectiveDifficulty: (exercise) => {
-        let baseDiff = exercise.difficulty || 5;
-        const fb = state.exerciseFeedback[exercise.id];
-        if (fb) {
-            if (fb.avgScore >= 8) baseDiff += 1;
-            if (fb.avgScore <= 3) baseDiff -= 1;
-        }
-        return Math.max(0, Math.min(10, baseDiff));
-    },
-
-    matchesFilters: (exercise) => {
-        const f = state.filters;
+        let matches = true;
         
-        if (f.force.length > 0 && exercise.force && !f.force.includes(exercise.force)) return false;
-        if (f.mechanic.length > 0 && exercise.mechanic && !f.mechanic.includes(exercise.mechanic)) return false;
-        if (f.equipment.length > 0 && exercise.equipment && !f.equipment.includes(exercise.equipment)) return false;
-        if (f.category.length > 0 && exercise.category && !f.category.includes(exercise.category)) return false;
-        if (f.quiet.length > 0) {
-            const wantsQuiet = f.quiet.includes('true');
-            const wantsLoud = f.quiet.includes('false');
-            if (wantsQuiet && !exercise.quiet) return false;
-            if (wantsLoud && exercise.quiet) return false;
+        if (state.filters.primaryMuscles.length > 0) {
+            const hasMatch = (e.primaryMuscles || []).some(p => state.filters.primaryMuscles.includes(p));
+            if (!hasMatch) matches = false;
         }
         
-        const opts = router.filterOptions || {};
-        const allPrimarySelected = f.primaryMuscles.length > 0 && 
-            opts.primaryMuscles && 
-            f.primaryMuscles.length === opts.primaryMuscles.length;
-        const allSecondarySelected = f.secondaryMuscles.length > 0 && 
-            opts.secondaryMuscles && 
-            f.secondaryMuscles.length === opts.secondaryMuscles.length;
-        
-        if (f.primaryMuscles.length === 0) {
-            // No primary filter - matches everything
-        } else if (allPrimarySelected) {
-            // All primary muscles selected - include exercises with or without muscle data
-        } else if (!exercise.primaryMuscles || exercise.primaryMuscles.length === 0) {
-            // Filter is active but exercise has no muscles - doesn't match
-            return false;
-        } else if (!exercise.primaryMuscles.some(m => f.primaryMuscles.includes(m))) {
-            // Exercise muscles don't match selected filters
-            return false;
+        if (state.filters.secondaryMuscles.length > 0) {
+            const hasMatch = (e.secondaryMuscles || []).some(p => state.filters.secondaryMuscles.includes(p));
+            if (!hasMatch && (e.primaryMuscles || []).length === 0) matches = false;
         }
         
-        if (f.secondaryMuscles.length === 0) {
-            // No secondary filter - matches everything
-        } else if (allSecondarySelected) {
-            // All secondary muscles selected - include exercises with or without muscle data
-        } else if (!exercise.secondaryMuscles || exercise.secondaryMuscles.length === 0) {
-            // Filter is active but exercise has no secondary muscles - doesn't match
-            return false;
-        } else if (!exercise.secondaryMuscles.some(m => f.secondaryMuscles.includes(m))) {
-            // Exercise secondary muscles don't match selected filters
-            return false;
+        if (state.filters.force.length > 0) {
+            if (!e.force || !state.filters.force.includes(e.force)) matches = false;
         }
         
-        return true;
-    },
-
-    generateWorkout: () => {
-        const bias = Logic.analyzeUser();
-        state.settings.difficultyBias = bias;
-        store.set('settings', state.settings);
-
-        const selectedWarmups = [];
-        const wuPool = warmupExercises.filter(e => Logic.matchesFilters(e));
-        for(let i=0; i<3; i++) {
-            if (wuPool.length === 0) break;
-            const idx = Math.floor(Math.random() * wuPool.length);
-            selectedWarmups.push({...wuPool.splice(idx, 1)[0], met: 4});
+        if (state.filters.equipment.length > 0) {
+            if (!e.equipment || !state.filters.equipment.includes(e.equipment)) matches = false;
         }
-
-        let targetDiff = Math.max(0, Math.min(10, 5 + bias * 2));
-
-        let pool = allExercises.filter(e => !e.warmup && Logic.matchesFilters(e));
         
+        if (state.filters.mechanic.length > 0) {
+            if (!e.mechanic || !state.filters.mechanic.includes(e.mechanic)) matches = false;
+        }
+        
+        if (state.filters.category.length > 0) {
+            if (!e.category || !state.filters.category.includes(e.category)) matches = false;
+        }
+        
+        if (state.filters.quiet.length === 1) {
+            const wantsQuiet = state.filters.quiet.includes('true');
+            const wantsLoud = state.filters.quiet.includes('false');
+            if (wantsQuiet && !e.quiet) matches = false;
+            if (wantsLoud && e.quiet) matches = false;
+        }
+        
+        if (state.filters.partner.includes('exclude') && e.partner) matches = false;
+        
+        if (matches) count++;
+    });
+    
+    return count;
+};
+
+const getEffectiveDifficulty = (exercise) => {
+    if (exercise.id && state.exerciseFeedback[exercise.id]) {
+        return Math.round(state.exerciseFeedback[exercise.id].avgScore);
+    }
+    return exercise.difficulty || 5;
+};
+
+const normalPDF = (x, mean, stdDev) => {
+    const exp = -0.5 * Math.pow((x - mean) / stdDev, 2);
+    return Math.exp(exp);
+};
+
+const selectExercises = (targetDiff, count, filters) => {
+    let pool = (exercises || []).filter(e => !e.partner && !e.warmup);
+    
+    if (filters.primaryMuscles.length > 0) {
+        pool = pool.filter(e => (e.primaryMuscles || []).some(p => filters.primaryMuscles.includes(p)));
+    }
+    
+    if (filters.secondaryMuscles.length > 0) {
+        pool = pool.filter(e => (e.secondaryMuscles || []).length === 0 || (e.secondaryMuscles || []).some(p => filters.secondaryMuscles.includes(p)));
+    }
+    
+    if (filters.force.length > 0) {
+        pool = pool.filter(e => e.force && filters.force.includes(e.force));
+    }
+    
+    if (filters.equipment.length > 0) {
+        pool = pool.filter(e => e.equipment && filters.equipment.includes(e.equipment));
+    }
+    
+    if (filters.mechanic.length > 0) {
+        pool = pool.filter(e => e.mechanic && filters.mechanic.includes(e.mechanic));
+    }
+    
+    if (filters.category.length > 0) {
+        pool = pool.filter(e => e.category && filters.category.includes(e.category));
+    }
+    
+    if (filters.quiet.length === 1) {
+        const wantsQuiet = filters.quiet.includes('true');
+        const wantsLoud = filters.quiet.includes('false');
         pool = pool.filter(e => {
-            const effDiff = Logic.getEffectiveDifficulty(e);
-            return Math.abs(effDiff - targetDiff) <= 3;
+            if (wantsQuiet) return e.quiet;
+            if (wantsLoud) return !e.quiet;
+            return true;
         });
-
-        let upperPool = pool.filter(e => 
-            e.primaryMuscles && e.primaryMuscles.some(m => 
-                ['chest', 'pectorals', 'back', 'lats', 'traps', 'middle back', 'lower back', 'shoulders', 'deltoids', 'biceps', 'triceps'].includes(m.toLowerCase())
-            )
-        );
-        let lowerPool = pool.filter(e => 
-            e.primaryMuscles && e.primaryMuscles.some(m => 
-                ['quadriceps', 'quads', 'hamstrings', 'glutes', 'calves'].includes(m.toLowerCase())
-            )
-        );
-        let corePool = pool.filter(e => 
-            e.primaryMuscles && e.primaryMuscles.some(m => 
-                ['abdominals', 'abs', 'obliques'].includes(m.toLowerCase())
-            )
-        );
-        let cardioPool = pool.filter(e => 
-            e.primaryMuscles && e.primaryMuscles.some(m => m.toLowerCase() === 'cardio')
-        );
-
-        const sortPool = (p) => p.sort((a,b) => {
-            const distA = Math.abs(Logic.getEffectiveDifficulty(a) - targetDiff) + Math.random() * 0.5;
-            const distB = Math.abs(Logic.getEffectiveDifficulty(b) - targetDiff) + Math.random() * 0.5;
-            return distA - distB;
-        });
-
-        sortPool(upperPool);
-        sortPool(lowerPool);
-        sortPool(corePool);
-        sortPool(cardioPool);
-
-        let selectedExercises = [
-            ...upperPool.slice(0,4),
-            ...lowerPool.slice(0,4),
-            ...corePool.slice(0,2),
-            ...cardioPool.slice(0,2)
-        ];
-
-        if (selectedExercises.length < 12) {
-            let remaining = pool.filter(e => !selectedExercises.includes(e));
-            sortPool(remaining);
-            selectedExercises.push(...remaining.slice(0, 12 - selectedExercises.length));
+    }
+    
+    if (filters.partner.includes('exclude')) {
+        pool = pool.filter(e => !e.partner);
+    }
+    
+    const stdDev = 1.5;
+    
+    const difficulties = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const rawProbs = difficulties.map(d => normalPDF(d, targetDiff, stdDev));
+    const sumProbs = rawProbs.reduce((a, b) => a + b, 0);
+    const probabilities = rawProbs.map(p => p / sumProbs);
+    
+    const selectedDifficulties = [];
+    for (let i = 0; i < count; i++) {
+        const rand = Math.random();
+        let cumulative = 0;
+        for (let d = 0; d < 10; d++) {
+            cumulative += probabilities[d];
+            if (rand <= cumulative) {
+                selectedDifficulties.push(d + 1);
+                break;
+            }
         }
-        selectedExercises = selectedExercises.slice(0,12);
-
-        for (let i = selectedExercises.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [selectedExercises[i], selectedExercises[j]] = [selectedExercises[j], selectedExercises[i]];
+    }
+    
+    const byDifficulty = {};
+    difficulties.forEach(d => byDifficulty[d] = []);
+    pool.forEach(e => {
+        const effDiff = getEffectiveDifficulty(e);
+        if (!byDifficulty[effDiff]) byDifficulty[effDiff] = [];
+        byDifficulty[effDiff].push(e);
+    });
+    
+    const selected = [];
+    const usedIds = new Set();
+    
+    for (const diff of selectedDifficulties) {
+        const candidates = byDifficulty[diff] || [];
+        const available = candidates.filter(e => !usedIds.has(e.id));
+        
+        if (available.length > 0) {
+            const choice = available[Math.floor(Math.random() * available.length)];
+            selected.push(choice);
+            usedIds.add(choice.id);
         }
+    }
+    
+    if (selected.length < count) {
+        const remaining = pool.filter(e => !usedIds.has(e.id));
+        while (selected.length < count && remaining.length > 0) {
+            const idx = Math.floor(Math.random() * remaining.length);
+            selected.push(remaining[idx]);
+            remaining.splice(idx, 1);
+        }
+    }
+    
+    return selected;
+};
 
-        return {
-            warmups: selectedWarmups,
-            main: selectedExercises,
-            totalTime: (selectedExercises.length * 40) + (selectedWarmups.length * 30),
-            targetDifficulty: targetDiff
-        };
+const generateWorkout = () => {
+    const diff = state.settings.difficulty;
+    
+    const selectedWarmups = warmups
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+    
+    const mainCount = 12;
+    const mainExercises = selectExercises(diff, mainCount, state.filters);
+    
+    return {
+        warmups: selectedWarmups,
+        main: mainExercises,
+        targetDifficulty: diff
+    };
+};
+
+const speak = (text) => {
+    if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(u);
     }
 };
 
-const getImages = (exercise) => {
-    const exerciseDir = exercise.id || exercise.name.replace(/\s/g, '_').toLowerCase();
-    return [
-        `data2/exercises/${exerciseDir}/images/0.jpg`,
-        `data2/exercises/${exerciseDir}/images/1.jpg`
-    ];
+const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
-const getMetForExercise = (exercise, isWarmup) => {
-    if (isWarmup) return 3;
-    if (exercise.met) return exercise.met;
+const app = {
+    currentView: 'home',
     
-    const diff = exercise.difficulty || 5;
-    const quiet = exercise.quiet !== false;
-    const category = (exercise.category || '').toLowerCase();
-    
-    let baseMet = 4;
-    
-    if (category === 'cardio') baseMet = 8;
-    else if (category === 'plyometrics') baseMet = 9;
-    else if (category === 'strength') {
-        if (diff <= 3) baseMet = 4;
-        else if (diff <= 6) baseMet = 6;
-        else baseMet = 8;
-    }
-    else if (category === 'stretching') baseMet = 2;
-    else if (category === 'powerlifting') baseMet = 7;
-    
-    if (!quiet) baseMet += 1;
-    
-    return Math.max(2, Math.min(10, baseMet));
-};
-
-const router = {
-    current: 'home',
-    activeWorkout: null,
-    timer: null,
-    tempScore: 5,
-    filterOptions: null,
-
     navigate: (view) => {
-        router.current = view;
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        app.currentView = view;
+        const container = document.getElementById('app');
+        container.innerHTML = '';
         
-        const app = document.getElementById('app');
-        app.innerHTML = '';
-
-        if (view === 'home') router.renderHome(app);
-        else if (view === 'workout') router.renderWorkout(app);
-        else if (view === 'stats') router.renderStats(app);
-        else if (view === 'algo') router.renderAlgo(app);
-        else if (view === 'library') router.renderLibrary(app);
-        else if (view === 'custom') router.renderCustom(app);
-        else if (view === 'settings') router.renderSettings(app);
-        else if (view === 'filter') router.renderFilter(app);
-        
-        const navMap = { 'home':0, 'library':1, 'stats':2, 'algo':3, 'custom':4, 'settings':5 };
-        if(navMap[view] !== undefined) document.querySelectorAll('.nav-item')[navMap[view]].classList.add('active');
-        
-        document.getElementById('mainNav').style.display = (view === 'workout' || view === 'filter') ? 'none' : 'flex';
+        if (view === 'home') app.renderHome(container);
+        else if (view === 'workout') app.renderWorkout(container);
+        else if (view === 'settings') app.renderSettings(container);
     },
-
+    
     renderHome: (container) => {
-        const workoutCount = state.workouts.length;
-        const bias = state.settings.difficultyBias;
-
+        const opts = getFilterOptions();
+        const selectedPrimary = (state.filters && state.filters.primaryMuscles) || [];
+        const selectedSecondary = (state.filters && state.filters.secondaryMuscles) || [];
+        const selectedForce = (state.filters && state.filters.force) || [];
+        const selectedEquipment = (state.filters && state.filters.equipment) || [];
+        const selectedMechanic = (state.filters && state.filters.mechanic) || [];
+        const selectedCategory = (state.filters && state.filters.category) || [];
+        const selectedQuiet = (state.filters && state.filters.quiet) || [];
+        const availableCount = countAvailableExercises();
+        
         container.innerHTML = `
             <div class="scroll-container">
-                <h1 class="text-2xl mb-2">Hello, Athlete</h1>
-                <p class="text-muted mb-4">Your daily fitness awaits.</p>
-
-                <div class="card flex justify-between">
-                    <div class="text-center">
-                        <div class="text-xl text-primary">${workoutCount}</div>
-                        <div class="text-sm text-muted">Workouts</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xl text-accent">${state.workouts.reduce((a,b)=>a+b.calories, 0)}</div>
-                        <div class="text-sm text-muted">Kcal Burned</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xl">${Math.max(0, Math.min(10, Math.round(5 + bias * 2)))}/10</div>
-                        <div class="text-sm text-muted">Difficulty Level</div>
+                <h1 class="text-2xl mb-2">7-Min Workout</h1>
+                <p class="text-muted mb-4">Quick fitness session</p>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Difficulty Level</div>
+                    <div class="difficulty-display">${state.settings.difficulty}/10</div>
+                    <input type="range" min="1" max="10" value="${state.settings.difficulty}" 
+                        onchange="app.setDifficulty(this.value)">
+                    <div class="flex justify-between text-xs text-muted mt-1">
+                        <span>Easy</span>
+                        <span>Hard</span>
                     </div>
                 </div>
-
-                <button class="btn btn-primary btn-lg" onclick="router.navigate('filter')">
-                    Start 7-Min Workout
-                </button>
-
-                <h3 class="text-xl mt-4 mb-2">Recent Activity</h3>
-                ${state.workouts.slice().reverse().slice(0,3).map(w => `
-                    <div class="card flex justify-between items-center">
-                        <div>
-                            <div class="font-bold">${new Date(w.date).toLocaleDateString()}</div>
-                            <div class="text-sm text-muted">RPE: ${w.rpe}/10</div>
-                        </div>
-                        <div class="text-accent">+${w.calories} kcal</div>
-                    </div>
-                `).join('') || '<p class="text-muted">No recent workouts.</p>'}
-            </div>
-        `;
-    },
-
-    buildFilterOptions: () => {
-        if (router.filterOptions) return router.filterOptions;
-        
-        const forces = new Set();
-        const mechanics = new Set();
-        const equipment = new Set();
-        const primaryMuscles = new Set();
-        const secondaryMuscles = new Set();
-        const categories = new Set();
-
-        allExercises.forEach(e => {
-            if (e.force) forces.add(e.force);
-            if (e.mechanic) mechanics.add(e.mechanic);
-            if (e.equipment) equipment.add(e.equipment);
-            if (e.category) categories.add(e.category);
-            if (e.primaryMuscles) e.primaryMuscles.forEach(m => primaryMuscles.add(m));
-            if (e.secondaryMuscles) e.secondaryMuscles.forEach(m => secondaryMuscles.add(m));
-        });
-
-        router.filterOptions = {
-            force: Array.from(forces).sort(),
-            mechanic: Array.from(mechanics).sort(),
-            equipment: Array.from(equipment).sort(),
-            primaryMuscles: Array.from(primaryMuscles).sort(),
-            secondaryMuscles: Array.from(secondaryMuscles).sort(),
-            category: Array.from(categories).sort()
-        };
-        
-        return router.filterOptions;
-    },
-
-    renderFilter: (container) => {
-        const opts = router.buildFilterOptions();
-        const f = state.filters;
-
-        const renderCheckboxGroup = (title, key, options) => {
-            const allChecked = options.length > 0 && options.every(opt => f[key].includes(opt));
-            return `
-                <div class="filter-group">
-                    <div class="filter-header">
-                        <h4 class="filter-title">${title}</h4>
-                        <button class="select-all-btn ${allChecked ? 'active' : ''}" onclick="router.toggleSelectAll('${key}', ${JSON.stringify(options).replace(/"/g, "'")})">
-                            ${allChecked ? 'Deselect All' : 'Select All'}
-                        </button>
-                    </div>
-                    <div class="filter-options">
-                        ${options.map(opt => `
-                            <label class="filter-option ${f[key].includes(opt) ? 'selected' : ''}">
-                                <input type="checkbox" ${f[key].includes(opt) ? 'checked' : ''} 
-                                    onchange="router.toggleFilter('${key}', '${opt}', this.checked)">
-                                ${opt}
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Primary Muscles</div>
+                    <div class="filter-grid">
+                        ${opts.primaryMuscles.map(m => `
+                            <label class="filter-chip ${selectedPrimary.includes(m) ? 'selected' : ''}" data-filter="primaryMuscles" data-value="${m}">
+                                <input type="checkbox" ${selectedPrimary.includes(m) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('primaryMuscles', '${m}', this.checked)">
+                                ${m}
                             </label>
                         `).join('')}
                     </div>
                 </div>
-            `;
-        };
-
-        const calculateCounts = () => {
-            let mainCount = 0;
-            let warmupCount = 0;
-            
-            allExercises.forEach(e => {
-                if (Logic.matchesFilters(e)) {
-                    if (e.warmup) warmupCount++;
-                    else mainCount++;
-                }
-            });
-            
-            return { main: mainCount, warmup: warmupCount, total: mainCount + warmupCount };
-        };
-
-        const counts = calculateCounts();
-
-        const getCountColor = (count) => {
-            if (count >= 500) return 'var(--accent)';
-            if (count >= 200) return 'var(--primary)';
-            if (count >= 50) return '#f59e0b';
-            return 'var(--danger)';
-        };
-
-        const updateCounts = () => {
-            const newCounts = calculateCounts();
-            document.getElementById('countMain').innerText = newCounts.main;
-            document.getElementById('countMain').style.color = getCountColor(newCounts.main);
-            document.getElementById('countWarmup').innerText = '+ ' + newCounts.warmup;
-            document.getElementById('countWarmup').style.color = getCountColor(newCounts.warmup);
-            document.getElementById('countTotal').innerText = '= ' + newCounts.total;
-            document.getElementById('countTotal').style.color = getCountColor(newCounts.total);
-        };
-
-        container.innerHTML = `
-            <div class="scroll-container filter-container">
-                <h1 class="text-2xl mb-4">Configure Workout</h1>
-                <p class="text-sm text-muted mb-4">Filter exercises or leave all unchecked for full selection</p>
                 
-                ${renderCheckboxGroup('Force', 'force', opts.force)}
-                ${renderCheckboxGroup('Mechanic', 'mechanic', opts.mechanic)}
-                ${renderCheckboxGroup('Equipment', 'equipment', opts.equipment)}
-                ${renderCheckboxGroup('Category', 'category', opts.category)}
-                ${renderCheckboxGroup('Primary Muscles', 'primaryMuscles', opts.primaryMuscles)}
-                ${renderCheckboxGroup('Secondary Muscles', 'secondaryMuscles', opts.secondaryMuscles)}
-                
-                <div class="filter-group">
-                    <div class="filter-header">
-                        <h4 class="filter-title">Noise Level</h4>
-                        <button class="select-all-btn ${f.quiet.length === 2 ? 'active' : ''}" onclick="router.toggleSelectAll('quiet', ['true','false'])">
-                            ${f.quiet.length === 2 ? 'Deselect All' : 'Select All'}
-                        </button>
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Secondary Muscles</div>
+                    <div class="filter-grid">
+                        ${opts.secondaryMuscles.map(m => `
+                            <label class="filter-chip ${selectedSecondary.includes(m) ? 'selected' : ''}" data-filter="secondaryMuscles" data-value="${m}">
+                                <input type="checkbox" ${selectedSecondary.includes(m) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('secondaryMuscles', '${m}', this.checked)">
+                                ${m}
+                            </label>
+                        `).join('')}
                     </div>
-                    <div class="filter-options">
-                        <label class="filter-option ${f.quiet.includes('true') ? 'selected' : ''}">
-                            <input type="checkbox" ${f.quiet.includes('true') ? 'checked' : ''} 
-                                onchange="router.toggleFilter('${'quiet'}', '${'true'}', this.checked)">
+                </div>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Force</div>
+                    <div class="filter-grid">
+                        ${opts.force.map(f => `
+                            <label class="filter-chip ${selectedForce.includes(f) ? 'selected' : ''}" data-filter="force" data-value="${f}">
+                                <input type="checkbox" ${selectedForce.includes(f) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('force', '${f}', this.checked)">
+                                ${f}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Equipment</div>
+                    <div class="filter-grid">
+                        ${opts.equipment.map(e => `
+                            <label class="filter-chip ${selectedEquipment.includes(e) ? 'selected' : ''}" data-filter="equipment" data-value="${e}">
+                                <input type="checkbox" ${selectedEquipment.includes(e) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('equipment', '${e}', this.checked)">
+                                ${e}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Mechanic</div>
+                    <div class="filter-grid">
+                        ${opts.mechanic.map(m => `
+                            <label class="filter-chip ${selectedMechanic.includes(m) ? 'selected' : ''}" data-filter="mechanic" data-value="${m}">
+                                <input type="checkbox" ${selectedMechanic.includes(m) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('mechanic', '${m}', this.checked)">
+                                ${m}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Category</div>
+                    <div class="filter-grid">
+                        ${opts.category.map(c => `
+                            <label class="filter-chip ${selectedCategory.includes(c) ? 'selected' : ''}" data-filter="category" data-value="${c}">
+                                <input type="checkbox" ${selectedCategory.includes(c) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('category', '${c}', this.checked)">
+                                ${c}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Noise Level</div>
+                    <div class="filter-grid">
+                        <label class="filter-chip ${selectedQuiet.includes('true') ? 'selected' : ''}" data-filter="quiet" data-value="true">
+                            <input type="checkbox" ${selectedQuiet.includes('true') ? 'checked' : ''}
+                                onchange="app.toggleFilter('quiet', 'true', this.checked)">
                             Quiet
                         </label>
-                        <label class="filter-option ${f.quiet.includes('false') ? 'selected' : ''}">
-                            <input type="checkbox" ${f.quiet.includes('false') ? 'checked' : ''} 
-                                onchange="router.toggleFilter('${'quiet'}', '${'false'}', this.checked)">
-                            Loud/Jumping
+                        <label class="filter-chip ${selectedQuiet.includes('false') ? 'selected' : ''}" data-filter="quiet" data-value="false">
+                            <input type="checkbox" ${selectedQuiet.includes('false') ? 'checked' : ''}
+                                onchange="app.toggleFilter('quiet', 'false', this.checked)">
+                            Loud
                         </label>
                     </div>
                 </div>
-
-                <div class="filter-count-display" id="filterCountDisplay">
-                    <div class="count-main" id="countMain" style="color: ${getCountColor(counts.main)}">${counts.main}</div>
-                    <div class="count-warmup" id="countWarmup" style="color: ${getCountColor(counts.warmup)}">+ ${counts.warmup}</div>
-                    <div class="count-total" id="countTotal" style="color: ${getCountColor(counts.total)}">= ${counts.total}</div>
+                
+                <div class="card">
+                    <div class="text-sm text-muted mb-2">Partner Required</div>
+                    <div class="filter-grid">
+                        <label class="filter-chip" data-filter="partner" data-value="exclude">
+                            <input type="checkbox" ${state.filters.partner.includes('exclude') ? 'checked' : ''}
+                                onchange="app.toggleFilter('partner', 'exclude', this.checked)">
+                            Exclude Partner Exercises
+                        </label>
+                    </div>
                 </div>
-
-                <div class="filter-actions">
-                    <button class="btn btn-danger" onclick="router.resetFilters()">Reset Filters</button>
-                    <button class="btn btn-primary btn-lg" onclick="router.startWorkout()">Start Workout</button>
+                
+                <div class="card" style="text-align: center;">
+                    <div class="text-sm text-muted">Available Exercises</div>
+                    <div class="difficulty-display" id="exerciseCount">${availableCount}</div>
                 </div>
+                
+                <button class="btn btn-danger mt-2" onclick="app.clearFilters()">Clear All Filters</button>
+                
+                <button class="btn btn-primary btn-lg mt-2" onclick="app.startWorkout()">
+                    Start 7-Min Workout
+                </button>
+                
+                <button class="btn btn-lg mt-2" style="background: var(--card); border-color: var(--card-border);" onclick="app.navigate('settings')">
+                    Settings & Sync
+                </button>
             </div>
         `;
-
-        window.filterUpdateCounts = updateCounts;
     },
-
-    toggleSelectAll: (key, options) => {
-        const allSelected = options.every(opt => state.filters[key].includes(opt));
-        
-        if (allSelected) {
-            state.filters[key] = [];
+    
+    setDifficulty: (val) => {
+        state.settings.difficulty = parseInt(val);
+        store.set('settings', state.settings);
+        document.querySelector('.difficulty-display').textContent = val + '/10';
+    },
+    
+    toggleFilter: (filterType, value, checked) => {
+        if (!state.filters[filterType]) {
+            state.filters[filterType] = [];
+        }
+        if (checked) {
+            state.filters[filterType].push(value);
         } else {
-            state.filters[key] = [...options];
-        }
-        
-        store.set('filters', state.filters);
-        
-        // Update button
-        const btnEl = document.querySelector(`button[onclick*="toggleSelectAll('${key}'"]`);
-        if (btnEl) {
-            btnEl.classList.toggle('active', !allSelected);
-            btnEl.innerText = allSelected ? 'Select All' : 'Deselect All';
-        }
-        
-        // Find all checkboxes for this filter and update them
-        const checkboxMap = {
-            'force': 'Force',
-            'mechanic': 'Mechanic',
-            'equipment': 'Equipment',
-            'category': 'Category',
-            'primaryMuscles': 'Primary Muscles',
-            'secondaryMuscles': 'Secondary Muscles',
-            'quiet': 'Noise Level'
-        };
-        
-        const groupTitle = checkboxMap[key];
-        if (groupTitle) {
-            document.querySelectorAll('.filter-group').forEach(group => {
-                const title = group.querySelector('.filter-title');
-                if (title && title.innerText === groupTitle) {
-                    group.querySelectorAll('.filter-option').forEach(label => {
-                        const checkbox = label.querySelector('input');
-                        if (checkbox) {
-                            // Match pattern: router.toggleFilter('key', 'value', this.checked)
-                            const onchange = checkbox.getAttribute('onchange') || '';
-                            const match = onchange.match(/toggleFilter\('([^']+)',\s*'([^']+)'/);
-                            if (match) {
-                                const [, k, v] = match;
-                                label.classList.toggle('selected', state.filters[k].includes(v));
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        
-        if (window.filterUpdateCounts) {
-            window.filterUpdateCounts();
-        }
-    },
-
-    toggleFilter: (key, value, checked) => {
-        const idx = state.filters[key].indexOf(value);
-        if (checked && idx === -1) {
-            state.filters[key].push(value);
-        } else if (!checked && idx !== -1) {
-            state.filters[key].splice(idx, 1);
+            state.filters[filterType] = state.filters[filterType].filter(v => v !== value);
         }
         store.set('filters', state.filters);
         
-        // Update the checkbox UI
-        const optionEls = document.querySelectorAll(`input[onchange*="'${key}', '${value}'"]`);
-        optionEls.forEach(el => {
-            const label = el.closest('.filter-option');
-            if (label) {
-                label.classList.toggle('selected', checked);
-            }
-        });
-        
-        // Update select all button state
-        const opts = router.filterOptions || {};
-        const options = opts[key] || [];
-        if (options.length > 0) {
-            const allSelected = options.every(opt => state.filters[key].includes(opt));
-            const btnEl = document.querySelector(`button[onclick*="toggleSelectAll('${key}'"]`);
-            if (btnEl) {
-                btnEl.classList.toggle('active', !allSelected);
-                btnEl.innerText = allSelected ? 'Select All' : 'Deselect All';
-            }
+        const chip = document.querySelector(`label[data-filter="${filterType}"][data-value="${value}"]`);
+        if (chip) {
+            chip.classList.toggle('selected', checked);
         }
         
-        if (window.filterUpdateCounts) {
-            window.filterUpdateCounts();
+        console.log('Filter updated:', filterType, value, checked, 'filters:', state.filters);
+        
+        const countEl = document.getElementById('exerciseCount');
+        if (countEl) {
+            const newCount = countAvailableExercises();
+            console.log('New count:', newCount);
+            countEl.textContent = newCount;
         }
     },
-
-    resetFilters: () => {
-        state.filters = {
-            force: [],
-            mechanic: [],
-            equipment: [],
-            primaryMuscles: [],
-            secondaryMuscles: [],
-            category: [],
-            quiet: []
-        };
-        store.set('filters', state.filters);
-        
-        // Update all checkbox states visually
-        document.querySelectorAll('.filter-option').forEach(el => {
-            el.classList.remove('selected');
-            const checkbox = el.querySelector('input');
-            if (checkbox) checkbox.checked = false;
-        });
-        document.querySelectorAll('.select-all-btn').forEach(el => {
-            el.classList.remove('active');
-            el.innerText = 'Select All';
-        });
-        
-        if (window.filterUpdateCounts) {
-            window.filterUpdateCounts();
-        }
+    
+    clearFilters: () => {
+        localStorage.removeItem('filters');
+        state.filters = { primaryMuscles: [], secondaryMuscles: [], force: [], equipment: [], mechanic: [], category: [], quiet: [], partner: [] };
+        app.navigate('home');
     },
-
+    
     startWorkout: () => {
-        if (!allExercises || allExercises.length === 0) {
-            alert('Exercises are still loading. Please wait.');
-            return;
-        }
-        
-        const filteredCount = allExercises.filter(e => !e.warmup && Logic.matchesFilters(e)).length;
-        
-        if (filteredCount < 6) {
-            alert(`Not enough exercises match your filters (${filteredCount} found). Please loosen your filters.`);
-            return;
-        }
-        
-        router.activeWorkout = Logic.generateWorkout();
-        router.navigate('workout');
+        currentWorkout = generateWorkout();
+        phase = 'warmup';
+        exerciseIndex = 0;
+        currentDifficulty = state.settings.difficulty;
+        currentImageIndex = 0;
+        app.navigate('workout');
     },
-
+    
+    getExerciseImages: (exercise) => {
+        const dirName = exercise.id || exercise.name.replace(/\s+/g, '_').toLowerCase();
+        return [
+            `data2/exercises/${dirName}/images/0.jpg`,
+            `data2/exercises/${dirName}/images/1.jpg`
+        ];
+    },
+    
     renderWorkout: (container) => {
-        let phase = 'warmup';
-        let idx = 0;
-        let timeLeft = 20;
-        let isPaused = false;
-        const wo = router.activeWorkout;
-        let currentEx = wo.warmups[0];
-        let currentImageIndex = 0;
-
-        const speak = (txt) => {
-            if('speechSynthesis' in window) {
-                const u = new SpeechSynthesisUtterance(txt);
-                window.speechSynthesis.speak(u);
-            }
-        };
-
-        const tick = () => {
-            if(isPaused) return;
-            timeLeft--;
-            updateUI();
-            if(timeLeft <= 0) nextPhase();
-        };
-
-        const nextPhase = () => {
-            if (phase === 'warmup') {
-                idx++;
-                if(idx >= wo.warmups.length) {
-                    phase = 'work';
-                    idx = 0;
-                    currentEx = wo.main[idx];
-                    currentImageIndex = 0;
-                    timeLeft = 30;
-                    speak(currentEx.name);
-                } else {
-                    currentEx = wo.warmups[idx];
-                    timeLeft = 20;
-                    speak(currentEx.name);
-                }
-            } else if (phase === 'work') {
-                phase = 'rest';
-                timeLeft = 10;
-                speak("Rest");
-            } else if (phase === 'rest') {
-                idx++;
-                if(idx >= wo.main.length) {
-                    finishWorkout();
-                    return;
-                }
-                phase = 'work';
-                currentEx = wo.main[idx];
-                currentImageIndex = 0;
-                timeLeft = 30;
-                speak(currentEx.name);
-            }
-            updateUI();
-        };
-
-        const finishWorkout = () => {
-            clearInterval(router.timer);
-            container.innerHTML = `
-                <div class="p-4 flex flex-col h-full justify-center text-center">
-                    <h1 class="text-2xl mb-4 text-accent">Workout Complete!</h1>
-                    <p class="mb-6 text-muted">Rate overall difficulty (RPE)</p>
-                    
-                    <div class="mb-8">
-                        <div class="flex justify-between text-sm mb-2 text-muted">
-                            <span>Very Easy</span>
-                            <span>Extreme</span>
-                        </div>
-                        <input type="range" id="rpeSlider" min="1" max="10" value="5">
-                        <div class="text-center text-3xl mt-2 font-bold text-primary" id="rpeValue">5</div>
+        const wo = currentWorkout;
+        const isWarmup = phase === 'warmup';
+        const isRest = phase === 'rest';
+        const currentEx = isWarmup ? wo.warmups[exerciseIndex] : wo.main[exerciseIndex];
+        
+        const warmupCount = wo.warmups.length;
+        const mainCount = wo.main.length;
+        
+        const images = app.getExerciseImages(currentEx);
+        const imageIndex = currentImageIndex || 0;
+        
+        let contentHTML = '';
+        
+        if (!isRest) {
+            contentHTML = `
+                <div class="exercise-images">
+                    <img src="${images[imageIndex]}" alt="${currentEx.name}" 
+                        class="exercise-image" 
+                        onclick="app.nextImage()"
+                        onerror="this.style.display='none'">
+                    <div class="image-dots">
+                        ${images.map((_, i) => `<span class="dot ${i === imageIndex ? 'active' : ''}" onclick="app.switchImage(${i})"></span>`).join('')}
                     </div>
-
-                    <button class="btn btn-primary btn-lg" onclick="router.saveWorkout(document.getElementById('rpeSlider').value)">
-                        Save & Calculate Calories
-                    </button>
                 </div>
+                <h2 class="exercise-name">${currentEx.name}</h2>
+                <div class="exercise-diff">Difficulty: ${getEffectiveDifficulty(currentEx)}/10</div>
+                <p class="exercise-desc">${currentEx.description}</p>
             `;
-            document.getElementById('rpeSlider').oninput = (e) => {
-                document.getElementById('rpeValue').innerText = e.target.value;
-            };
-        };
-
-        const getInstructions = (exercise) => {
-            if (exercise.instructions && Array.isArray(exercise.instructions)) {
-                return exercise.instructions.join(' ');
-            }
-            return exercise.desc || exercise.description || '';
-        };
-
-        const updateUI = () => {
-            document.getElementById('timerDisplay').innerText = timeLeft;
-            document.getElementById('exName').innerText = currentEx.name;
-            document.getElementById('exDifficulty').innerText = `Difficulty: ${Logic.getEffectiveDifficulty(currentEx)}/10`;
-            document.getElementById('exInstructions').innerText = getInstructions(currentEx);
-            document.getElementById('phaseLabel').innerText = phase.toUpperCase();
-            
-            if(phase === 'warmup') document.getElementById('progressLabel').innerText = `${idx+1}/${wo.warmups.length}`;
-            else if(phase !== 'rest') document.getElementById('progressLabel').innerText = `${idx+1}/${wo.main.length}`;
-
-            const fbControls = document.getElementById('fbControls');
-            const fbMsg = document.getElementById('fbMsg');
-            
-            if(phase === 'rest') {
-                if(fbControls.classList.contains('hidden') && fbMsg.classList.contains('hidden')) {
-                    fbControls.classList.remove('hidden');
-                    fbControls.classList.add('visible');
-                    document.getElementById('exSlider').value = 5; 
-                    router.tempScore = 5;
-                }
-            } else {
-                fbControls.classList.remove('visible');
-                fbControls.classList.add('hidden');
-            }
-
-            updateImage();
-        };
-
-        const updateImage = () => {
-            const imgContainer = document.getElementById('exerciseImage');
-            const imgDots = document.getElementById('imageDots');
-            if (!imgContainer || !imgDots) return;
-
-            const images = getImages(currentEx);
-            
-            imgContainer.innerHTML = `<img src="${images[currentImageIndex]}" alt="${currentEx.name}" class="exercise-image" onclick="router.switchNextImage()" onerror="this.style.display='none'">`;
-            
-            imgDots.innerHTML = images.map((_, i) => 
-                `<span class="dot ${i === currentImageIndex ? 'active' : ''}" onclick="router.switchImage(${i})"></span>`
-            ).join('');
-        };
-
-        container.innerHTML = `
-            <div class="flex flex-col h-full p-4 relative">
-                <div class="flex justify-between items-center mb-2">
-                    <button class="btn text-sm" onclick="router.quitWorkout()">Quit</button>
-                    <div class="text-center">
-                        <div class="uppercase text-xs tracking-widest text-muted" id="phaseLabel">Warmup</div>
-                        <div class="text-xs" id="progressLabel">1/${wo.warmups.length}</div>
-                    </div>
-                </div>
-
-                <div class="exercise-image-container" id="exerciseImage"></div>
-                <div class="image-dots" id="imageDots"></div>
-
-                <div class="flex-1 flex flex-col items-center justify-center">
-                    <h2 class="text-2xl text-center mb-1" id="exName">${currentEx.name}</h2>
-                    <div class="text-xs text-accent mb-2" id="exDifficulty"></div>
-                    <p class="text-sm text-muted text-center mb-4 px-2" style="min-height: 3em;" id="exInstructions">${getInstructions(currentEx)}</p>
-                    
-                    <div class="timer-circle">
-                        <div class="progress-ring" id="pRing"></div>
-                        <div class="text-5xl font-bold" id="timerDisplay">${timeLeft}</div>
-                    </div>
-                </div>
-
-                <div class="feedback-container" id="fbContainer">
-                    <div id="fbControls" class="hidden w-full">
-                        <p class="text-sm text-center mb-2 text-muted">How hard was that?</p>
-                        <div class="flex justify-between text-xs text-muted px-2">
-                            <span>Easy (1)</span>
-                            <span>Hard (10)</span>
-                        </div>
-                        <input type="range" id="exSlider" min="1" max="10" value="5" onchange="router.tempScore=this.value">
-                        <button class="btn btn-primary w-full mt-2" onclick="router.submitExFeedback()">Submit</button>
-                    </div>
-                    <div id="fbMsg" class="hidden text-center text-accent w-full">Feedback Saved</div>
-                </div>
-
-                <div class="flex gap-4 mt-2">
-                    <button class="btn btn-lg flex-1" id="pauseBtn">Pause</button>
-                    <button class="btn btn-lg btn-primary flex-1" id="skipBtn">Skip</button>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('pauseBtn').onclick = () => {
-            isPaused = !isPaused;
-            document.getElementById('pauseBtn').innerText = isPaused ? "Resume" : "Pause";
-        };
-        document.getElementById('skipBtn').onclick = () => { timeLeft = 1; };
-
-        router.tempScore = 5;
-        router.submitExFeedback = () => {
-            const ex = wo.main[idx];
-            if(!state.exerciseFeedback[ex.id]) state.exerciseFeedback[ex.id] = { avgScore: 5, count: 0 };
-            
-            const old = state.exerciseFeedback[ex.id];
-            const newAvg = ((old.avgScore * old.count) + parseInt(router.tempScore)) / (old.count + 1);
-            state.exerciseFeedback[ex.id] = { avgScore: newAvg, count: old.count + 1 };
-            store.set('ex_feedback', state.exerciseFeedback);
-
-            document.getElementById('fbControls').classList.remove('visible');
-            document.getElementById('fbControls').classList.add('hidden');
-            
-            const msg = document.getElementById('fbMsg');
-            msg.classList.remove('hidden');
-            msg.classList.add('visible');
-            setTimeout(() => {
-                msg.classList.remove('visible');
-                msg.classList.add('hidden');
-            }, 1000);
-        };
-
-        router.quitWorkout = () => {
-            if(confirm("Quit workout?")) {
-                clearInterval(router.timer);
-                router.navigate('home');
-            }
-        };
-
-        router.switchImage = (index) => {
-            currentImageIndex = index;
-            updateImage();
-        };
-
-        router.switchNextImage = () => {
-            const images = getImages(currentEx);
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            updateImage();
-        };
-
-        timeLeft = 20;
-        speak(currentEx.name);
-        updateUI();
-        router.timer = setInterval(tick, 1000);
-    },
-
-    saveWorkout: (rpe) => {
-        const userWeight = state.settings.weight;
-        const rpeVal = parseInt(rpe);
-        const totalTimeSec = router.activeWorkout.totalTime;
-        const totalTimeHours = totalTimeSec / 3600;
-        
-        let totalCalories = 0;
-        
-        router.activeWorkout.main.forEach((ex) => {
-            const met = getMetForExercise(ex, false);
-            const exerciseDurationSec = 30;
-            const exerciseDurationHours = exerciseDurationSec / 3600;
-            const exerciseCalories = met * userWeight * exerciseDurationHours;
-            totalCalories += exerciseCalories;
-        });
-        
-        router.activeWorkout.warmups.forEach((ex) => {
-            const met = getMetForExercise(ex, true);
-            const exerciseDurationSec = 20;
-            const exerciseDurationHours = exerciseDurationSec / 3600;
-            const exerciseCalories = met * userWeight * exerciseDurationHours;
-            totalCalories += exerciseCalories;
-        });
-        
-        totalCalories = Math.round(totalCalories);
-
-        const w = {
-            date: Date.now(),
-            rpe: rpeVal,
-            calories: totalCalories
-        };
-        state.workouts.push(w);
-        store.set('workouts', state.workouts);
-        router.navigate('home');
-    },
-
-    renderStats: (container) => {
-        container.innerHTML = `
-            <div class="scroll-container">
-                <h1 class="text-2xl mb-4">Analysis</h1>
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">Difficulty Trend (RPE)</h3>
-                    <canvas id="rpeChart"></canvas>
-                </div>
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">Calories Burned</h3>
-                    <canvas id="calChart"></canvas>
-                </div>
-            </div>
-        `;
-        setTimeout(() => {
-            const rpeData = state.workouts.map(w => w.rpe);
-            const calData = state.workouts.map(w => w.calories);
-            Chart.draw('rpeChart', rpeData, '#10b981');
-            Chart.draw('calChart', calData, '#ef4444');
-        }, 100);
-    },
-
-    renderAlgo: (container) => {
-        const bias = state.settings.difficultyBias;
-        container.innerHTML = `
-            <div class="scroll-container">
-                <h1 class="text-2xl mb-4">How it Works</h1>
+        } else {
+            contentHTML = `
+                <h2 class="exercise-name">Rest</h2>
+                <p class="exercise-desc">Rate this exercise</p>
                 
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">1. Adaptive Difficulty Algorithm</h3>
-                    <p class="text-sm text-muted mb-4">The app analyzes your last 5 workouts to determine your current fitness level. Based on your average RPE (Rate of Perceived Exertion), it adjusts the workout intensity:</p>
-                    <ul class="text-sm text-muted" style="padding-left:16px;">
-                        <li class="mb-2"><strong>RPE &lt; 5:</strong> You're finding workouts too easy → Difficulty increases</li>
-                        <li class="mb-2"><strong>RPE 5-8:</strong> Perfect effort → Difficulty stays optimal</li>
-                        <li class="mb-2"><strong>RPE &gt; 8:</strong> Too hard → Difficulty decreases</li>
-                    </ul>
-                </div>
-
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">2. Personalized Exercise Ratings</h3>
-                    <p class="text-sm text-muted mb-4">After each exercise during rest periods, you can rate how hard it felt. The algorithm learns your personal strengths and weaknesses:</p>
-                    <ul class="text-sm text-muted" style="padding-left:16px;">
-                        <li class="mb-2"><strong>High rating (8-10):</strong> Exercise is harder for you than average → Algorithm increases its effective difficulty for future workouts</li>
-                        <li class="mb-2"><strong>Low rating (1-3):</strong> Exercise is easier for you than average → Algorithm decreases its effective difficulty</li>
-                    </ul>
-                </div>
-
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">3. Warmup Selection</h3>
-                    <p class="text-sm text-muted mb-4">Every workout starts with 3 warmup exercises selected from our library of stretching and mobility exercises. Warmups automatically respect your filter settings but are always included to prepare your muscles.</p>
-                </div>
-
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">4. Main Workout Selection</h3>
-                    <p class="text-sm text-muted mb-4">12 exercises are selected targeting all major muscle groups for a balanced full-body workout:</p>
-                    <ul class="text-sm text-muted" style="padding-left:16px;">
-                        <li class="mb-2">4 Upper body exercises (chest, back, shoulders, arms)</li>
-                        <li class="mb-2">4 Lower body exercises (quads, hamstrings, glutes, calves)</li>
-                        <li class="mb-2">2 Core exercises (abs, obliques)</li>
-                        <li class="mb-2">2 Cardio exercises (for calorie burn)</li>
-                    </ul>
-                </div>
-
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">5. Calorie Calculation</h3>
-                    <p class="text-sm text-muted mb-4">Calories are calculated using the scientifically-validated MET formula:</p>
-                    <ul class="text-sm text-muted" style="padding-left:16px;">
-                        <li class="mb-2"><strong>MET Value:</strong> Each exercise has a MET (Metabolic Equivalent) based on intensity (1-10 scale). 1 MET = your resting calorie burn.</li>
-                        <li class="mb-2"><strong>Formula:</strong> Calories = MET × Weight(kg) × Duration(hours)</li>
-                        <li class="mb-2"><strong>Example:</strong> 70kg person, MET 6, 30 seconds → 6 × 70 × (30/3600) = 3.5 calories per exercise</li>
-                        <li class="mb-2"><strong>Total:</strong> 12 main exercises (30s each) + 3 warmups (20s each) = ~40-80 calories total</li>
-                        <li class="mb-2"><strong>Note:</strong> This is a 7-minute workout - calorie burn is naturally limited by time. Higher MET exercises burn more, but realistic totals are 40-100 calories.</li>
-                    </ul>
-                </div>
-
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">6. Filter System</h3>
-                    <p class="text-sm text-muted mb-4">Before each workout, you can filter exercises by:</p>
-                    <ul class="text-sm text-muted" style="padding-left:16px;">
-                        <li class="mb-2"><strong>Force:</strong> push, pull, or static exercises</li>
-                        <li class="mb-2"><strong>Mechanic:</strong> compound or isolation movements</li>
-                        <li class="mb-2"><strong>Equipment:</strong> body only, dumbbell, barbell, machine, etc.</li>
-                        <li class="mb-2"><strong>Category:</strong> strength, stretching, cardio, etc.</li>
-                        <li class="mb-2"><strong>Muscles:</strong> specific muscle groups</li>
-                        <li class="mb-2"><strong>Noise:</strong> quiet vs loud/jumping exercises</li>
-                    </ul>
-                </div>
-
-                <div class="card">
-                    <h3 class="text-sm text-muted uppercase mb-2">Your Bias Status</h3>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Recovery Mode</span>
-                        <span>High Intensity</span>
+                <div class="rest-rating">
+                    <div class="text-sm text-muted mb-2">How was "${currentEx.name}"?</div>
+                    <div class="difficulty-display" id="restRatingDisplay">5</div>
+                    <input type="range" min="1" max="10" value="5" id="restRatingSlider"
+                        onchange="document.getElementById('restRatingDisplay').textContent = this.value">
+                    <div class="flex justify-between text-xs text-muted mt-1">
+                        <span>Too Easy</span>
+                        <span>Perfect</span>
+                        <span>Too Hard</span>
                     </div>
-                    <div class="w-full bg-card-border h-2 rounded overflow-hidden">
-                        <div style="width: ${((bias + 2) / 4.5) * 100}%; background: var(--primary); height: 100%"></div>
-                    </div>
-                    <p class="text-xs text-muted mt-2">Algorithm Bias: ${bias.toFixed(2)} (Target Difficulty: ${Math.max(0, Math.min(10, Math.round(5 + bias * 2)))}/10)</p>
                 </div>
-            </div>
-        `;
-    },
-
-    renderLibrary: (container) => {
-        const listHtml = allExercises.slice(0, 100).map(e => {
-            const effectiveDiff = Logic.getEffectiveDifficulty(e);
-            const warmupBadge = e.warmup ? '<span class="tag tag-warmup">WARMUP</span>' : '';
-            const customBadge = e.custom ? '<span class="tag tag-custom">CUSTOM</span>' : '';
-            return `
-                <div class="list-item">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="font-bold">${e.name}</span>
-                        <div class="flex items-center gap-2">
-                            ${warmupBadge}
-                            ${customBadge}
-                            <span class="tag ${effectiveDiff <= 3 ? 'tag-easy' : (effectiveDiff <= 6 ? 'tag-med' : 'tag-hard')}">
-                                ${effectiveDiff}/10
-                            </span>
-                        </div>
-                    </div>
-                    <div class="text-xs text-muted mb-1">${e.category || 'N/A'} | ${e.equipment || 'N/A'}</div>
-                    <p class="text-xs text-muted">${e.primaryMuscles ? e.primaryMuscles.join(', ') : ''}</p>
-                </div>
+                
+                <button class="btn mt-2" style="width: 100%; max-width: 280px;" onclick="app.submitRating()">
+                    Submit
+                </button>
             `;
-        }).join('');
-
-        container.innerHTML = `
-            <div class="scroll-container">
-                <h1 class="text-2xl mb-4">Exercise Library</h1>
-                <p class="text-sm text-muted mb-4">${allExercises.length} Exercises Available</p>
-                <div class="card" style="padding:0">
-                    ${listHtml}
-                </div>
-            </div>
-        `;
-    },
-
-    renderCustom: (container) => {
-        container.innerHTML = `
-            <div class="scroll-container">
-                <h1 class="text-2xl mb-4">Add Custom Exercise</h1>
-                
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Exercise Name *</label>
-                    <input type="text" id="customName" class="btn w-full text-left" placeholder="e.g., Custom Push-up">
-                </div>
-                
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Difficulty (0-10) *</label>
-                    <input type="number" id="customDiff" class="btn w-full text-left" min="0" max="10" value="5">
-                </div>
-                
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Description *</label>
-                    <textarea id="customDesc" class="btn w-full text-left" rows="2" placeholder="Describe how to perform the exercise"></textarea>
-                </div>
-                
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Category</label>
-                    <select id="customCategory" class="btn w-full text-left">
-                        <option value="strength">Strength</option>
-                        <option value="cardio">Cardio</option>
-                        <option value="stretching">Stretching</option>
-                        <option value="plyometrics">Plyometrics</option>
-                    </select>
-                </div>
-                
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Equipment</label>
-                    <select id="customEquipment" class="btn w-full text-left">
-                        <option value="body only">Body Only</option>
-                        <option value="dumbbell">Dumbbell</option>
-                        <option value="barbell">Barbell</option>
-                        <option value="machine">Machine</option>
-                        <option value="kettlebell">Kettlebell</option>
-                        <option value="cable">Cable</option>
-                        <option value="bands">Bands</option>
-                        <option value="medicine ball">Medicine Ball</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Primary Muscles (hold Ctrl to select multiple)</label>
-                    <select id="customPrimaryMuscles" class="btn w-full text-left" multiple style="height: 120px;">
-                        <option value="chest">Chest</option>
-                        <option value="back">Back</option>
-                        <option value="shoulders">Shoulders</option>
-                        <option value="biceps">Biceps</option>
-                        <option value="triceps">Triceps</option>
-                        <option value="forearms">Forearms</option>
-                        <option value="quadriceps">Quadriceps</option>
-                        <option value="hamstrings">Hamstrings</option>
-                        <option value="glutes">Glutes</option>
-                        <option value="calves">Calves</option>
-                        <option value="abdominals">Abs</option>
-                        <option value="obliques">Obliques</option>
-                    </select>
-                </div>
-                
-                <div class="card">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" id="customQuiet" checked>
-                        <span class="text-sm text-muted">Quiet Exercise (no jumping/loud noise)</span>
-                    </label>
-                </div>
-                
-                <div class="card">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" id="customWarmup">
-                        <span class="text-sm text-muted">Warmup Exercise</span>
-                    </label>
-                </div>
-                
-                <button class="btn btn-primary btn-lg w-full mt-4" onclick="router.addCustomExercise()">Add Exercise</button>
-                
-                <h3 class="text-xl mt-4 mb-2">Your Custom Exercises</h3>
-                ${state.customExercises.map(e => `
-                    <div class="card flex justify-between items-center">
-                        <div>
-                            <div class="font-bold">${e.name}</div>
-                            <div class="text-sm text-muted">${e.difficulty}/10 | ${e.category} | ${e.primaryMuscles ? e.primaryMuscles.join(', ') : 'N/A'}</div>
-                        </div>
-                        <button class="btn btn-danger" onclick="router.deleteCustomExercise('${e.id}')">Delete</button>
-                    </div>
-                `).join('') || '<p class="text-muted">No custom exercises yet.</p>'}
-            </div>
-        `;
-    },
-
-    addCustomExercise: () => {
-        const name = document.getElementById('customName').value.trim();
-        const diff = parseInt(document.getElementById('customDiff').value);
-        const desc = document.getElementById('customDesc').value.trim();
-        const category = document.getElementById('customCategory').value;
-        const equipment = document.getElementById('customEquipment').value;
-        const quiet = document.getElementById('customQuiet').checked;
-        const isWarmup = document.getElementById('customWarmup').checked;
-        
-        const primarySelect = document.getElementById('customPrimaryMuscles');
-        const primaryMuscles = Array.from(primarySelect.selectedOptions).map(opt => opt.value);
-        
-        if (!name || isNaN(diff) || diff < 0 || diff > 10 || !desc) {
-            alert('Please fill in all required fields (Name, Difficulty, Description).');
-            return;
-        }
-        const id = name.replace(/\s/g, '').toLowerCase() + '_' + Date.now();
-        if (state.customExercises.some(e => e.id === id)) {
-            alert('Exercise already exists.');
-            return;
         }
         
-        const newEx = { 
-            name, 
-            difficulty: diff, 
-            desc, 
-            id, 
-            met: getMetForExercise({difficulty: diff, quiet, category}, isWarmup),
-            quiet, 
-            warmup: isWarmup, 
-            category, 
-            equipment,
-            primaryMuscles,
-            secondaryMuscles: [],
-            force: category === 'stretching' ? 'static' : (category === 'cardio' ? 'push' : 'pull'),
-            custom: true
-        };
+        container.innerHTML = `
+            <div class="workout-screen">
+                <div class="workout-header">
+                    <button class="btn btn-sm" onclick="app.quitWorkout()">Quit</button>
+                    <div class="workout-info">
+                        <div class="phase-label">${isRest ? 'REST' : phase.toUpperCase()}</div>
+                        <div class="progress-label">
+                            ${isWarmup ? `${exerciseIndex + 1}/${warmupCount}` : `${exerciseIndex + 1}/${mainCount}`}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workout-content">
+                    ${contentHTML}
+                    
+                    <div class="timer-circle ${isRest ? 'rest-timer' : ''}">
+                        <div class="timer-ring" id="timerRing"></div>
+                        <div class="timer-text" id="timerDisplay">${formatTime(timeLeft)}</div>
+                    </div>
+                </div>
+                
+                <div class="workout-controls">
+                    <div class="button-row">
+                        <button class="btn btn-lg" id="pauseBtn" onclick="app.togglePause()">
+                            ${isPaused ? 'Resume' : 'Pause'}
+                        </button>
+                        <button class="btn btn-lg btn-primary" onclick="app.skipExercise()">
+                            ${isRest ? 'Next' : 'Skip'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
         
-        state.customExercises.push(newEx);
-        store.set('custom_exercises', state.customExercises);
-        allExercises.push(newEx);
         if (isWarmup) {
-            warmupExercises.push(newEx);
+            timeLeft = 20;
+        } else if (isRest) {
+            timeLeft = 15;
+        } else {
+            timeLeft = 30;
         }
-        router.renderCustom(document.getElementById('app'));
+        
+        if (!isRest) {
+            speak(currentEx.name);
+        }
+        updateTimerDisplay();
+        startTimer();
     },
-
-    deleteCustomExercise: (id) => {
-        const exercise = state.customExercises.find(e => e.id === id);
-        state.customExercises = state.customExercises.filter(e => e.id !== id);
-        store.set('custom_exercises', state.customExercises);
-        allExercises = allExercises.filter(e => e.id !== id);
-        warmupExercises = warmupExercises.filter(e => e.id !== id);
-        router.renderCustom(document.getElementById('app'));
+    
+    nextImage: () => {
+        const wo = currentWorkout;
+        const isWarmup = phase === 'warmup';
+        const currentEx = isWarmup ? wo.warmups[exerciseIndex] : wo.main[exerciseIndex];
+        const images = app.getExerciseImages(currentEx);
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        app.renderWorkout(document.getElementById('app'));
     },
-
+    
+    switchImage: (index) => {
+        currentImageIndex = index;
+        app.renderWorkout(document.getElementById('app'));
+    },
+    
+    togglePause: () => {
+        isPaused = !isPaused;
+        document.getElementById('pauseBtn').textContent = isPaused ? 'Resume' : 'Pause';
+    },
+    
+    skipExercise: () => {
+        nextPhase();
+    },
+    
+    submitRating: () => {
+        if (phase !== 'rest') return;
+        
+        const ratingSlider = document.getElementById('restRatingSlider');
+        const rating = ratingSlider ? parseInt(ratingSlider.value) : 5;
+        
+        const wo = currentWorkout;
+        const lastEx = wo.main[exerciseIndex];
+        
+        if (lastEx && lastEx.id) {
+            if (!state.exerciseFeedback[lastEx.id]) {
+                state.exerciseFeedback[lastEx.id] = { avgScore: 5, count: 0 };
+            }
+            const old = state.exerciseFeedback[lastEx.id];
+            const newAvg = ((old.avgScore * old.count) + rating) / (old.count + 1);
+            state.exerciseFeedback[lastEx.id] = { avgScore: newAvg, count: old.count + 1 };
+            store.set('exerciseFeedback', state.exerciseFeedback);
+        }
+        
+        const submitBtn = document.querySelector('.rest-rating + .btn');
+        if (submitBtn) {
+            submitBtn.textContent = 'Submitted!';
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+        }
+    },
+    
+    quitWorkout: () => {
+        if (confirm('Quit workout?')) {
+            clearInterval(timer);
+            app.navigate('home');
+        }
+    },
+    
     renderSettings: (container) => {
         container.innerHTML = `
             <div class="scroll-container">
                 <h1 class="text-2xl mb-4">Settings</h1>
-                <div class="card">
-                    <label class="text-sm text-muted block mb-2">Weight (kg) - For Calorie Calculation</label>
-                    <input type="number" value="${state.settings.weight}" class="btn w-full text-left" onchange="state.settings.weight=parseFloat(this.value); store.set('settings', state.settings)">
-                </div>
                 
                 <div class="card">
                     <h3 class="text-sm text-muted uppercase mb-2">Cloud Sync</h3>
                     <p class="text-xs text-muted mb-3">Connect to your local Save-Server to backup and sync your data.</p>
                     <div class="flex gap-2">
-                        <button class="btn btn-primary flex-1" onclick="router.saveToServer()">
+                        <button class="btn btn-primary flex-1" onclick="app.saveToServer()">
                             Save to Server
                         </button>
-                        <button class="btn flex-1" style="background: var(--accent); border-color: var(--accent); color: white;" onclick="router.syncFromServer()">
+                        <button class="btn flex-1" style="background: var(--accent); border-color: var(--accent); color: white;" onclick="app.syncFromServer()">
                             Sync from Server
                         </button>
                     </div>
                     <p id="syncStatus" class="text-xs text-muted mt-2 text-center"></p>
-                </div>
-                
-                <div class="card">
-                    <button class="btn btn-danger w-full" onclick="if(confirm('Reset all data including workouts, custom exercises, and settings?')){ localStorage.clear(); location.reload(); }">Reset All Data</button>
                 </div>
             </div>
         `;
@@ -1243,17 +703,14 @@ const router = {
         statusEl.innerText = 'Saving...';
         statusEl.style.color = 'var(--primary)';
         
-        const dataToSave = {
-            workouts: state.workouts,
-            settings: state.settings,
-            exerciseFeedback: state.exerciseFeedback,
-            customExercises: state.customExercises,
-            filters: state.filters,
-            lastSync: new Date().toISOString()
-        };
-        
         try {
-            const result = await saveData(PROJECT_NAME, 'appData', dataToSave);
+            const data = {
+                settings: state.settings,
+                filters: state.filters,
+                lastSync: new Date().toISOString()
+            };
+            
+            await saveData(PROJECT_NAME, 'appData', data);
             statusEl.innerText = 'Saved successfully!';
             statusEl.style.color = 'var(--accent)';
         } catch (error) {
@@ -1263,19 +720,12 @@ const router = {
     },
     
     syncFromServer: async () => {
-        if (!confirm('This will overwrite your local data with data from the server. Continue?')) {
-            return;
-        }
-        
         const statusEl = document.getElementById('syncStatus');
         statusEl.innerText = 'Syncing...';
         statusEl.style.color = 'var(--primary)';
         
         try {
             const data = await getData(PROJECT_NAME);
-            
-            // Server returns { files: [ { workout data directly }, ... ] }
-            // Not { files: [ { filename: 'x', data: { ... } }, ... ] }
             const d = data.files && data.files[0] ? data.files[0] : null;
             
             if (!d) {
@@ -1284,34 +734,13 @@ const router = {
                 return;
             }
             
-            // Merge server data with local storage
-            if (d.workouts) state.workouts = d.workouts;
-            if (d.settings) {
-                state.settings = { ...state.settings, ...d.settings };
-                store.set('settings', state.settings);
-            }
-            if (d.exerciseFeedback) {
-                state.exerciseFeedback = d.exerciseFeedback;
-                store.set('ex_feedback', state.exerciseFeedback);
-            }
-            if (d.customExercises) {
-                state.customExercises = d.customExercises;
-                store.set('custom_exercises', state.customExercises);
-                
-                // Update allExercises with custom exercises
-                state.customExercises.forEach(ex => {
-                    if (!allExercises.find(e => e.id === ex.id)) {
-                        allExercises.push(ex);
-                        if (ex.warmup) warmupExercises.push(ex);
-                    }
-                });
-            }
-            if (d.filters) {
-                state.filters = { ...state.filters, ...d.filters };
-                store.set('filters', state.filters);
-            }
+            if (d.settings) state.settings = d.settings;
+            if (d.filters) state.filters = d.filters;
             
-            statusEl.innerText = `Synced! Last backup: ${d.lastSync ? new Date(d.lastSync).toLocaleString() : 'Unknown'}`;
+            store.set('settings', state.settings);
+            store.set('filters', state.filters);
+            
+            statusEl.innerText = 'Synced!';
             statusEl.style.color = 'var(--accent)';
         } catch (error) {
             statusEl.innerText = 'Error: ' + error.message;
@@ -1320,8 +749,91 @@ const router = {
     }
 };
 
-window.router = router;
+const startTimer = () => {
+    clearInterval(timer);
+    timer = setInterval(() => {
+        if (isPaused) return;
+        
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+            nextPhase();
+        }
+    }, 1000);
+};
 
-exerciseLoader.loadAll().then(() => {
-    router.navigate('home');
+const updateTimerDisplay = () => {
+    const display = document.getElementById('timerDisplay');
+    const ring = document.getElementById('timerRing');
+    
+    if (display) display.textContent = formatTime(timeLeft);
+    
+    if (ring) {
+        const totalTime = phase === 'warmup' ? 20 : (phase === 'rest' ? 15 : 30);
+        const progress = Math.max(0, timeLeft / totalTime);
+        const rotation = progress * 360;
+        ring.style.transform = `rotate(${rotation}deg)`;
+    }
+};
+
+const nextPhase = () => {
+    const wo = currentWorkout;
+    
+    if (phase === 'warmup') {
+        exerciseIndex++;
+        if (exerciseIndex >= wo.warmups.length) {
+            phase = 'work';
+            exerciseIndex = 0;
+            currentImageIndex = 0;
+            if (wo.main.length > 0) {
+                currentDifficulty = state.settings.difficulty;
+                speak(wo.main[0].name);
+                app.renderWorkout(document.getElementById('app'));
+                return;
+            }
+        } else {
+            speak(wo.warmups[exerciseIndex].name);
+            app.renderWorkout(document.getElementById('app'));
+            return;
+        }
+    }
+    
+    if (phase === 'work') {
+        phase = 'rest';
+        app.renderWorkout(document.getElementById('app'));
+        speak("Rest");
+        return;
+    }
+    
+    if (phase === 'rest') {
+        exerciseIndex++;
+        currentImageIndex = 0;
+        if (exerciseIndex >= wo.main.length) {
+            finishWorkout();
+            return;
+        }
+        phase = 'work';
+        speak(wo.main[exerciseIndex].name);
+        app.renderWorkout(document.getElementById('app'));
+        return;
+    }
+};
+
+const finishWorkout = () => {
+    clearInterval(timer);
+    const container = document.getElementById('app');
+    container.innerHTML = `
+        <div class="scroll-container flex flex-col h-full justify-center text-center">
+            <h1 class="text-2xl mb-4 text-accent">Workout Complete!</h1>
+            <p class="text-muted">Great job finishing your 7-minute workout.</p>
+            <button class="btn btn-primary btn-lg mt-6" onclick="app.navigate('home')">
+                Back to Home
+            </button>
+        </div>
+    `;
+};
+
+loadExercises().then(() => {
+    app.navigate('home');
 });

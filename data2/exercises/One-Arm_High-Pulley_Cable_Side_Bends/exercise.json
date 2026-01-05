@@ -20,5 +20,6 @@
   "category": "strength",
   "difficulty": 3,
   "quiet": false,
-  "warmup": true
+  "warmup": true,
+  "partner": false
 }

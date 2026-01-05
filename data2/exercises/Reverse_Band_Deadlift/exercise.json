@@ -24,5 +24,6 @@
   "category": "powerlifting",
   "difficulty": 9,
   "quiet": true,
-  "warmup": false
+  "warmup": false,
+  "partner": false
 }

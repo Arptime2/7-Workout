@@ -21,5 +21,6 @@
   "category": "cardio",
   "difficulty": 3,
   "quiet": false,
-  "warmup": false
+  "warmup": false,
+  "partner": false
 }

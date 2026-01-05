@@ -21,5 +21,6 @@
   "category": "plyometrics",
   "difficulty": 6,
   "quiet": false,
-  "warmup": false
+  "warmup": false,
+  "partner": false
 }

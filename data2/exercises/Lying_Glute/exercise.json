@@ -18,5 +18,6 @@
   "category": "stretching",
   "difficulty": 9,
   "quiet": true,
-  "warmup": true
+  "warmup": true,
+  "partner": true
 }

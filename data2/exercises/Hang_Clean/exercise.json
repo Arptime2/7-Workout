@@ -23,5 +23,6 @@
   "category": "olympic weightlifting",
   "difficulty": 6,
   "quiet": true,
-  "warmup": false
+  "warmup": false,
+  "partner": false
 }
