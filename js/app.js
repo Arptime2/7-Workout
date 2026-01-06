@@ -402,9 +402,7 @@ const app = {
                         <div class="timer-ring" id="timerRing"></div>
                         <div class="timer-text" id="timerDisplay">${formatTime(timeLeft)}</div>
                     </div>
-                </div>
-                
-                <div class="workout-controls">
+                    
                     <div class="button-row">
                         <button class="btn btn-lg" id="pauseBtn" onclick="app.togglePause()">
                             ${isPaused ? 'Resume' : 'Pause'}
