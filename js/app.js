@@ -222,7 +222,10 @@ const app = {
         
         container.innerHTML = `
             <div class="scroll-container">
-                <h1 class="text-2xl mb-2">7-Min Workout</h1>
+                <div class="page-header">
+                    <h1 class="text-2xl">7-Min Workout</h1>
+                    <button class="btn btn-sm" onclick="app.navigate('settings')">Settings</button>
+                </div>
                 <p class="text-muted mb-4">Quick fitness session</p>
                 
                 <div class="card">
@@ -258,10 +261,6 @@ const app = {
                 
                 <button class="btn btn-primary btn-lg mt-2" onclick="app.startWorkout()">
                     Start 7-Min Workout
-                </button>
-                
-                <button class="btn btn-lg mt-2" style="background: var(--card); border-color: var(--card-border);" onclick="app.navigate('settings')">
-                    Settings & Sync
                 </button>
             </div>
         `;
@@ -312,6 +311,14 @@ const app = {
         currentDifficulty = state.settings.difficulty;
         currentImageIndex = 0;
         app.navigate('workout');
+    },
+    
+    toggleSettings: () => {
+        if (app.currentView === 'settings') {
+            app.navigate('home');
+        } else {
+            app.navigate('settings');
+        }
     },
     
     getExerciseImages: (exercise) => {
@@ -383,6 +390,9 @@ const app = {
                             ${isWarmup ? `${exerciseIndex + 1}/${warmupCount}` : `${exerciseIndex + 1}/${mainCount}`}
                         </div>
                     </div>
+                    <button class="btn btn-sm" onclick="app.toggleSettings()">
+                        ${app.currentView === 'settings' ? 'Home' : 'Settings'}
+                    </button>
                 </div>
                 
                 <div class="workout-content">
@@ -482,7 +492,10 @@ const app = {
     renderSettings: (container) => {
         container.innerHTML = `
             <div class="scroll-container">
-                <h1 class="text-2xl mb-4">Settings</h1>
+                <div class="page-header">
+                    <h1 class="text-2xl">Settings</h1>
+                    <button class="btn btn-sm" onclick="app.navigate('home')">Back</button>
+                </div>
                 
                 <div class="card">
                     <h3 class="text-sm text-muted uppercase mb-2">Cloud Sync</h3>
