@@ -19,63 +19,46 @@ const store = {
 
 let state = {
     settings: store.get('settings', { difficulty: 5 }),
-    filters: { primaryMuscles: [], secondaryMuscles: [], force: [], equipment: [], mechanic: [], category: [], quiet: [], partner: [] },
+    filters: { targetMuscles: [] },
     exerciseFeedback: store.get('exerciseFeedback', {})
 };
 
 try {
     const saved = JSON.parse(localStorage.getItem('filters'));
     if (saved) {
-        state.filters.primaryMuscles = saved.primaryMuscles || [];
-        state.filters.secondaryMuscles = saved.secondaryMuscles || [];
-        state.filters.force = saved.force || [];
-        state.filters.equipment = saved.equipment || [];
-        state.filters.mechanic = saved.mechanic || [];
-        state.filters.category = saved.category || [];
-        state.filters.quiet = saved.quiet || [];
-        state.filters.partner = saved.partner || [];
+        state.filters.targetMuscles = saved.targetMuscles || [];
     }
 } catch (e) {}
 
 const loadExercises = async () => {
     try {
-        const response = await fetch('data2/exercises/index.json');
-        const dirs = await response.json();
+        const exResponse = await fetch('data3/exercises.json');
+        const allExercises = await exResponse.json();
         
-        const exercisePromises = dirs.map(async (dir) => {
-            try {
-                const exResponse = await fetch(`data2/exercises/${dir.name}/exercise.json`);
-                if (!exResponse.ok) return null;
-                const exercise = await exResponse.json();
-                return {
-                    name: exercise.name,
-                    difficulty: exercise.difficulty || 5,
-                    description: exercise.instructions ? exercise.instructions.join(' ') : '',
-                    bodyParts: [...(exercise.primaryMuscles || []), ...(exercise.secondaryMuscles || [])],
-                    primaryMuscles: exercise.primaryMuscles || [],
-                    secondaryMuscles: exercise.secondaryMuscles || [],
-                    partner: exercise.partner === true,
-                    force: exercise.force || 'push',
-                    equipment: exercise.equipment || 'body only',
-                    mechanic: exercise.mechanic || 'compound',
-                    category: exercise.category || 'strength',
-                    quiet: exercise.quiet !== false,
-                    warmup: exercise.warmup === true,
-                    id: dir.name,
-                    type: exercise.warmup === true ? 'warmup' : 'exercise'
-                };
-            } catch (e) {
-                return null;
-            }
-        });
+        const warmupResponse = await fetch('data3/warmup.json');
+        const warmupData = await warmupResponse.json();
         
-        const loaded = await Promise.all(exercisePromises);
-        const allLoaded = loaded.filter(e => e !== null);
+        warmups = warmupData.map(w => ({
+            name: w.name,
+            difficulty: w.difficulty || 1,
+            description: w.description,
+            bodyParts: w.target_muscles || [],
+            targetMuscles: w.target_muscles || [],
+            type: 'warmup',
+            id: w.name.replace(/\s+/g, '_').toLowerCase()
+        }));
         
-        warmups = allLoaded.filter(e => e.type === 'warmup');
-        exercises = allLoaded.filter(e => e.type === 'exercise');
+        exercises = allExercises.map(e => ({
+            name: e.name,
+            difficulty: e.difficulty || 5,
+            description: e.description,
+            bodyParts: e.target_muscles || [],
+            targetMuscles: e.target_muscles || [],
+            type: 'exercise',
+            id: e.name.replace(/\s+/g, '_').toLowerCase()
+        }));
         
-        console.log(`Loaded: ${allLoaded.length} total, ${warmups.length} warmups, ${exercises.length} exercises`);
+        console.log(`Loaded: ${exercises.length} exercises, ${warmups.length} warmups`);
         
     } catch (e) {
         console.error('Error loading exercises:', e);
@@ -85,29 +68,14 @@ const loadExercises = async () => {
 };
 
 const getFilterOptions = () => {
-    const primaryMusclesSet = new Set();
-    const secondaryMusclesSet = new Set();
-    const forceSet = new Set();
-    const equipmentSet = new Set();
-    const mechanicSet = new Set();
-    const categorySet = new Set();
+    const targetMusclesSet = new Set();
     
     (exercises || []).forEach(e => {
-        (e.primaryMuscles || []).forEach(p => primaryMusclesSet.add(p));
-        (e.secondaryMuscles || []). forEach(p => secondaryMusclesSet.add(p));
-        if (e.force) forceSet.add(e.force);
-        if (e.equipment) equipmentSet.add(e.equipment);
-        if (e.mechanic) mechanicSet.add(e.mechanic);
-        if (e.category) categorySet.add(e.category);
+        (e.targetMuscles || []).forEach(p => targetMusclesSet.add(p));
     });
     
     return {
-        primaryMuscles: Array.from(primaryMusclesSet).sort(),
-        secondaryMuscles: Array.from(secondaryMusclesSet).sort(),
-        force: Array.from(forceSet).sort(),
-        equipment: Array.from(equipmentSet).sort(),
-        mechanic: Array.from(mechanicSet).sort(),
-        category: Array.from(categorySet).sort()
+        targetMuscles: Array.from(targetMusclesSet).sort()
     };
 };
 
@@ -118,44 +86,12 @@ const countAvailableExercises = () => {
     
     let count = 0;
     exercises.forEach(e => {
-        if (e.warmup) return;
-        
         let matches = true;
         
-        if (state.filters.primaryMuscles.length > 0) {
-            const hasMatch = (e.primaryMuscles || []).some(p => state.filters.primaryMuscles.includes(p));
+        if (state.filters.targetMuscles.length > 0) {
+            const hasMatch = (e.targetMuscles || []).some(p => state.filters.targetMuscles.includes(p));
             if (!hasMatch) matches = false;
         }
-        
-        if (state.filters.secondaryMuscles.length > 0) {
-            const hasMatch = (e.secondaryMuscles || []).some(p => state.filters.secondaryMuscles.includes(p));
-            if (!hasMatch && (e.primaryMuscles || []).length === 0) matches = false;
-        }
-        
-        if (state.filters.force.length > 0) {
-            if (!e.force || !state.filters.force.includes(e.force)) matches = false;
-        }
-        
-        if (state.filters.equipment.length > 0) {
-            if (!e.equipment || !state.filters.equipment.includes(e.equipment)) matches = false;
-        }
-        
-        if (state.filters.mechanic.length > 0) {
-            if (!e.mechanic || !state.filters.mechanic.includes(e.mechanic)) matches = false;
-        }
-        
-        if (state.filters.category.length > 0) {
-            if (!e.category || !state.filters.category.includes(e.category)) matches = false;
-        }
-        
-        if (state.filters.quiet.length === 1) {
-            const wantsQuiet = state.filters.quiet.includes('true');
-            const wantsLoud = state.filters.quiet.includes('false');
-            if (wantsQuiet && !e.quiet) matches = false;
-            if (wantsLoud && e.quiet) matches = false;
-        }
-        
-        if (state.filters.partner.includes('exclude') && e.partner) matches = false;
         
         if (matches) count++;
     });
@@ -176,44 +112,10 @@ const normalPDF = (x, mean, stdDev) => {
 };
 
 const selectExercises = (targetDiff, count, filters) => {
-    let pool = (exercises || []).filter(e => !e.partner && !e.warmup);
+    let pool = (exercises || []).filter(e => e.type === 'exercise');
     
-    if (filters.primaryMuscles.length > 0) {
-        pool = pool.filter(e => (e.primaryMuscles || []).some(p => filters.primaryMuscles.includes(p)));
-    }
-    
-    if (filters.secondaryMuscles.length > 0) {
-        pool = pool.filter(e => (e.secondaryMuscles || []).length === 0 || (e.secondaryMuscles || []).some(p => filters.secondaryMuscles.includes(p)));
-    }
-    
-    if (filters.force.length > 0) {
-        pool = pool.filter(e => e.force && filters.force.includes(e.force));
-    }
-    
-    if (filters.equipment.length > 0) {
-        pool = pool.filter(e => e.equipment && filters.equipment.includes(e.equipment));
-    }
-    
-    if (filters.mechanic.length > 0) {
-        pool = pool.filter(e => e.mechanic && filters.mechanic.includes(e.mechanic));
-    }
-    
-    if (filters.category.length > 0) {
-        pool = pool.filter(e => e.category && filters.category.includes(e.category));
-    }
-    
-    if (filters.quiet.length === 1) {
-        const wantsQuiet = filters.quiet.includes('true');
-        const wantsLoud = filters.quiet.includes('false');
-        pool = pool.filter(e => {
-            if (wantsQuiet) return e.quiet;
-            if (wantsLoud) return !e.quiet;
-            return true;
-        });
-    }
-    
-    if (filters.partner.includes('exclude')) {
-        pool = pool.filter(e => !e.partner);
+    if (filters.targetMuscles.length > 0) {
+        pool = pool.filter(e => (e.targetMuscles || []).some(p => filters.targetMuscles.includes(p)));
     }
     
     const stdDev = 1.5;
@@ -314,14 +216,8 @@ const app = {
     },
     
     renderHome: (container) => {
-        const opts = getFilterOptions();
-        const selectedPrimary = (state.filters && state.filters.primaryMuscles) || [];
-        const selectedSecondary = (state.filters && state.filters.secondaryMuscles) || [];
-        const selectedForce = (state.filters && state.filters.force) || [];
-        const selectedEquipment = (state.filters && state.filters.equipment) || [];
-        const selectedMechanic = (state.filters && state.filters.mechanic) || [];
-        const selectedCategory = (state.filters && state.filters.category) || [];
-        const selectedQuiet = (state.filters && state.filters.quiet) || [];
+        const filterOptions = ['Chest', 'Back', 'Shoulders', 'Arms', 'Core', 'Legs', 'Glutes'];
+        const selectedTarget = (state.filters && state.filters.targetMuscles) || [];
         const availableCount = countAvailableExercises();
         
         container.innerHTML = `
@@ -341,107 +237,15 @@ const app = {
                 </div>
                 
                 <div class="card">
-                    <div class="text-sm text-muted mb-2">Primary Muscles</div>
+                    <div class="text-sm text-muted mb-2">Target Muscles</div>
                     <div class="filter-grid">
-                        ${opts.primaryMuscles.map(m => `
-                            <label class="filter-chip ${selectedPrimary.includes(m) ? 'selected' : ''}" data-filter="primaryMuscles" data-value="${m}">
-                                <input type="checkbox" ${selectedPrimary.includes(m) ? 'checked' : ''}
-                                    onchange="app.toggleFilter('primaryMuscles', '${m}', this.checked)">
+                        ${filterOptions.map(m => `
+                            <label class="filter-chip ${selectedTarget.includes(m) ? 'selected' : ''}" data-filter="targetMuscles" data-value="${m}">
+                                <input type="checkbox" ${selectedTarget.includes(m) ? 'checked' : ''}
+                                    onchange="app.toggleFilter('targetMuscles', '${m}', this.checked)">
                                 ${m}
                             </label>
                         `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Secondary Muscles</div>
-                    <div class="filter-grid">
-                        ${opts.secondaryMuscles.map(m => `
-                            <label class="filter-chip ${selectedSecondary.includes(m) ? 'selected' : ''}" data-filter="secondaryMuscles" data-value="${m}">
-                                <input type="checkbox" ${selectedSecondary.includes(m) ? 'checked' : ''}
-                                    onchange="app.toggleFilter('secondaryMuscles', '${m}', this.checked)">
-                                ${m}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Force</div>
-                    <div class="filter-grid">
-                        ${opts.force.map(f => `
-                            <label class="filter-chip ${selectedForce.includes(f) ? 'selected' : ''}" data-filter="force" data-value="${f}">
-                                <input type="checkbox" ${selectedForce.includes(f) ? 'checked' : ''}
-                                    onchange="app.toggleFilter('force', '${f}', this.checked)">
-                                ${f}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Equipment</div>
-                    <div class="filter-grid">
-                        ${opts.equipment.map(e => `
-                            <label class="filter-chip ${selectedEquipment.includes(e) ? 'selected' : ''}" data-filter="equipment" data-value="${e}">
-                                <input type="checkbox" ${selectedEquipment.includes(e) ? 'checked' : ''}
-                                    onchange="app.toggleFilter('equipment', '${e}', this.checked)">
-                                ${e}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Mechanic</div>
-                    <div class="filter-grid">
-                        ${opts.mechanic.map(m => `
-                            <label class="filter-chip ${selectedMechanic.includes(m) ? 'selected' : ''}" data-filter="mechanic" data-value="${m}">
-                                <input type="checkbox" ${selectedMechanic.includes(m) ? 'checked' : ''}
-                                    onchange="app.toggleFilter('mechanic', '${m}', this.checked)">
-                                ${m}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Category</div>
-                    <div class="filter-grid">
-                        ${opts.category.map(c => `
-                            <label class="filter-chip ${selectedCategory.includes(c) ? 'selected' : ''}" data-filter="category" data-value="${c}">
-                                <input type="checkbox" ${selectedCategory.includes(c) ? 'checked' : ''}
-                                    onchange="app.toggleFilter('category', '${c}', this.checked)">
-                                ${c}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Noise Level</div>
-                    <div class="filter-grid">
-                        <label class="filter-chip ${selectedQuiet.includes('true') ? 'selected' : ''}" data-filter="quiet" data-value="true">
-                            <input type="checkbox" ${selectedQuiet.includes('true') ? 'checked' : ''}
-                                onchange="app.toggleFilter('quiet', 'true', this.checked)">
-                            Quiet
-                        </label>
-                        <label class="filter-chip ${selectedQuiet.includes('false') ? 'selected' : ''}" data-filter="quiet" data-value="false">
-                            <input type="checkbox" ${selectedQuiet.includes('false') ? 'checked' : ''}
-                                onchange="app.toggleFilter('quiet', 'false', this.checked)">
-                            Loud
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="text-sm text-muted mb-2">Partner Required</div>
-                    <div class="filter-grid">
-                        <label class="filter-chip" data-filter="partner" data-value="exclude">
-                            <input type="checkbox" ${state.filters.partner.includes('exclude') ? 'checked' : ''}
-                                onchange="app.toggleFilter('partner', 'exclude', this.checked)">
-                            Exclude Partner Exercises
-                        </label>
                     </div>
                 </div>
                 
@@ -497,7 +301,7 @@ const app = {
     
     clearFilters: () => {
         localStorage.removeItem('filters');
-        state.filters = { primaryMuscles: [], secondaryMuscles: [], force: [], equipment: [], mechanic: [], category: [], quiet: [], partner: [] };
+        state.filters = { targetMuscles: [] };
         app.navigate('home');
     },
     
@@ -511,11 +315,7 @@ const app = {
     },
     
     getExerciseImages: (exercise) => {
-        const dirName = exercise.id || exercise.name.replace(/\s+/g, '_').toLowerCase();
-        return [
-            `data2/exercises/${dirName}/images/0.jpg`,
-            `data2/exercises/${dirName}/images/1.jpg`
-        ];
+        return [];
     },
     
     renderWorkout: (container) => {
@@ -529,11 +329,13 @@ const app = {
         
         const images = app.getExerciseImages(currentEx);
         const imageIndex = currentImageIndex || 0;
+        const hasImages = images && images.length > 0;
         
         let contentHTML = '';
         
         if (!isRest) {
             contentHTML = `
+                ${hasImages ? `
                 <div class="exercise-images">
                     <img src="${images[imageIndex]}" alt="${currentEx.name}" 
                         class="exercise-image" 
@@ -543,6 +345,7 @@ const app = {
                         ${images.map((_, i) => `<span class="dot ${i === imageIndex ? 'active' : ''}" onclick="app.switchImage(${i})"></span>`).join('')}
                     </div>
                 </div>
+                ` : ''}
                 <h2 class="exercise-name">${currentEx.name}</h2>
                 <div class="exercise-diff">Difficulty: ${getEffectiveDifficulty(currentEx)}/10</div>
                 <p class="exercise-desc">${currentEx.description}</p>
@@ -694,8 +497,31 @@ const app = {
                     </div>
                     <p id="syncStatus" class="text-xs text-muted mt-2 text-center"></p>
                 </div>
+                
+                <div class="card">
+                    <h3 class="text-sm text-muted uppercase mb-2">Data</h3>
+                    <p class="text-xs text-muted mb-3">Clear all locally stored data including filters, ratings, and settings.</p>
+                    <button class="btn btn-danger" style="width: 100%;" onclick="app.clearLocalStorage()">
+                        Delete Local Storage
+                    </button>
+                    <p id="clearStatus" class="text-xs text-muted mt-2 text-center"></p>
+                </div>
             </div>
         `;
+    },
+    
+    clearLocalStorage: () => {
+        const statusEl = document.getElementById('clearStatus');
+        if (confirm('Delete all local data? This cannot be undone.')) {
+            localStorage.removeItem('settings');
+            localStorage.removeItem('filters');
+            localStorage.removeItem('exerciseFeedback');
+            state.settings = { difficulty: 5 };
+            state.filters = { targetMuscles: [] };
+            state.exerciseFeedback = {};
+            statusEl.innerText = 'Local storage cleared!';
+            statusEl.style.color = 'var(--accent)';
+        }
     },
     
     saveToServer: async () => {

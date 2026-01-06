@@ -1,0 +1,966 @@
+[
+  {
+    "name": "Standard Push-Up",
+    "description": "Start in a high plank position. Lower your chest toward the floor by bending elbows, keeping body rigid. Push back up smoothly without locking elbows aggressively.",
+    "target_muscles": [
+      "Chest",
+      "Arms",
+      "Shoulders",
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Diamond Push-Up",
+    "description": "Place hands close together so index fingers and thumbs touch. Lower chest to hands and push up, keeping elbows tucked close to sides.",
+    "target_muscles": [
+      "Arms",
+      "Chest",
+      "Shoulders"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "Wide Grip Push-Up",
+    "description": "Place hands wider than shoulder-width. Lower body slowly and push up, focusing on the stretch in the chest.",
+    "target_muscles": [
+      "Chest",
+      "Shoulders"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Pike Push-Up",
+    "description": "From downward dog position (hips high), bend elbows to lower head toward the floor. Push back up towards hips. Keep motion controlled to protect head.",
+    "target_muscles": [
+      "Shoulders",
+      "Arms",
+      "Back"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Hindu Push-Up (Slow)",
+    "description": "Swoop down from downward dog, chest skimming the floor, into cobra pose. Push back to downward dog slowly. Do not slam hips.",
+    "target_muscles": [
+      "Shoulders",
+      "Chest",
+      "Arms",
+      "Back"
+    ],
+    "difficulty": 7
+  },
+  {
+    "name": "Dive Bomber Push-Up",
+    "description": "Swoop from downward dog to cobra, then reverse the exact motion backwards to the start. Requires significant control.",
+    "target_muscles": [
+      "Shoulders",
+      "Arms",
+      "Chest",
+      "Core"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Archer Push-Up",
+    "description": "Wide hands. Lower body to one side, straightening the other arm. Push up and switch. Keep movements fluid and slow.",
+    "target_muscles": [
+      "Chest",
+      "Arms",
+      "Core"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Spiderman Push-Up",
+    "description": "As you lower, bring one knee to the elbow on the same side without touching the foot to the ground. Push up and return leg.",
+    "target_muscles": [
+      "Chest",
+      "Core"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "T-Rotation Push-Up",
+    "description": "Push up, then rotate torso to side plank, reaching arm up. Return hand to floor gently. Alternate sides.",
+    "target_muscles": [
+      "Chest",
+      "Core",
+      "Shoulders"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Staggered Push-Up",
+    "description": "One hand standard, one hand lower near ribs. Push up, focusing on uneven load distribution. Switch hands after set.",
+    "target_muscles": [
+      "Chest",
+      "Arms",
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Slow Negative Push-Up",
+    "description": "Lower your body from high plank to floor taking 5-10 full seconds. Reset to knees to get back up. Focus on tension.",
+    "target_muscles": [
+      "Chest",
+      "Arms",
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Knuckle Push-Up",
+    "description": "Perform push-up on knuckles to protect wrists or increase range of motion. Place knuckles gently on floor.",
+    "target_muscles": [
+      "Chest",
+      "Arms"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Fingertip Push-Up",
+    "description": "Perform push-up on fingertips. Requires high hand strength. Do not attempt if fingers are weak.",
+    "target_muscles": [
+      "Chest",
+      "Arms"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Pseudo Planche Push-Up",
+    "description": "Hands near waist, fingers pointing back/out. Lean shoulders far forward over wrists. Push up while maintaining forward lean.",
+    "target_muscles": [
+      "Shoulders",
+      "Chest",
+      "Arms"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Typewriter Push-Up",
+    "description": "Start in wide push-up at the bottom. Slide body horizontally left to right, keeping chest just off the floor.",
+    "target_muscles": [
+      "Chest",
+      "Shoulders",
+      "Core"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Single-Arm Push-Up (Assisted)",
+    "description": "One hand on floor, one behind back. Feet wide. Lower and push up. Use a wall for balance assist if needed.",
+    "target_muscles": [
+      "Chest",
+      "Arms",
+      "Core"
+    ],
+    "difficulty": 9
+  },
+  {
+    "name": "Knee Push-Up",
+    "description": "Standard push-up motion with knees on the ground. Keep straight line from head to knees.",
+    "target_muscles": [
+      "Chest",
+      "Arms"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Cobra Push-Up",
+    "description": "Lie prone, hands under shoulders. Push upper body up keeping hips on floor. Focus on squeezing triceps at top.",
+    "target_muscles": [
+      "Arms",
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Floor Tricep Dips",
+    "description": "Sit, hands behind you, knees bent. Lift hips slightly. Bend elbows to lower hips (don't sit), straighten arms to lift.",
+    "target_muscles": [
+      "Arms"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Isometric Push-Up Hold",
+    "description": "Lower into a push-up until chest is 2 inches from floor. Hold this position statically for time.",
+    "target_muscles": [
+      "Chest",
+      "Arms",
+      "Core"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "Air Squat",
+    "description": "Feet shoulder-width. Lower hips back and down. Stand up squeezing glutes. Keep feet flat and quiet.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Sumo Squat",
+    "description": "Wide stance, toes out. Lower hips straight down. Targets inner thighs more than standard squat.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Prisoner Squat",
+    "description": "Squat with hands interlaced behind head. Keeps chest up and engages upper back posture.",
+    "target_muscles": [
+      "Legs",
+      "Glutes",
+      "Back"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Pulse Squat",
+    "description": "Lower to bottom of squat. Pulse up and down 3 inches continuously without standing up. Builds tension.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Pistol Squat",
+    "description": "Single-leg squat. Extend one leg forward, lower all the way down on standing leg. Push back up. Very hard.",
+    "target_muscles": [
+      "Legs",
+      "Glutes",
+      "Core"
+    ],
+    "difficulty": 9
+  },
+  {
+    "name": "Shrimp Squat",
+    "description": "Stand on one leg, hold other foot behind you. Lower bent knee to touch floor gently. Stand back up.",
+    "target_muscles": [
+      "Legs",
+      "Glutes",
+      "Core"
+    ],
+    "difficulty": 9
+  },
+  {
+    "name": "Forward Lunge",
+    "description": "Step forward, lower hips until knees are 90 degrees. Push back to start gently.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Reverse Lunge",
+    "description": "Step back, lower hips. Return to standing. Easier on knees than forward lunge.",
+    "target_muscles": [
+      "Glutes",
+      "Legs"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Side Lunge",
+    "description": "Step wide to side, bend that knee, keep other leg straight. Push back to center.",
+    "target_muscles": [
+      "Glutes",
+      "Legs"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Curtsy Lunge",
+    "description": "Step leg back and across behind other leg. Lower hips. Return to center.",
+    "target_muscles": [
+      "Glutes",
+      "Legs"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Walking Lunge",
+    "description": "Lunge forward, then step back foot forward into next lunge. Move smoothly and quietly across room.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Cossack Squat",
+    "description": "Very wide stance. Squat deep on one side, rotating opposite foot onto heel. Keep heel down on squatting leg.",
+    "target_muscles": [
+      "Legs",
+      "Core"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "Split Squat",
+    "description": "Static lunge position. Lower knee to floor and stand up without moving feet placement.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Duck Walk",
+    "description": "Deep squat. Walk forward staying as low as possible. rolling from heel to toe quietly.",
+    "target_muscles": [
+      "Legs",
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Calf Raise",
+    "description": "Stand tall. Press into toes to lift heels high. Lower slowly. Do not bounce.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 1
+  },
+  {
+    "name": "Single-Leg Calf Raise",
+    "description": "Stand on one leg. Lift heel high. Use wall fingertip support if balance fails, or do free-standing.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Glute Bridge",
+    "description": "Lie on back, knees bent. Lift hips until body is straight line. Squeeze glutes hard at top.",
+    "target_muscles": [
+      "Glutes",
+      "Legs"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Single-Leg Glute Bridge",
+    "description": "One foot on floor, one leg in air. Lift hips using grounded leg. Keep hips level.",
+    "target_muscles": [
+      "Glutes",
+      "Legs",
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Frog Pump",
+    "description": "Soles of feet together, knees out. Lift hips rapidly but controlled. High rep burnout.",
+    "target_muscles": [
+      "Glutes"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Donkey Kick",
+    "description": "All fours. Kick one foot up to ceiling keeping knee bent. Squeeze glute at top.",
+    "target_muscles": [
+      "Glutes"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Fire Hydrant",
+    "description": "All fours. Lift bent leg out to side. Keep torso still, do not rotate spine.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Clamshell",
+    "description": "Side-lying, knees bent. Open top knee while keeping feet touching. Great for hip health.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 1
+  },
+  {
+    "name": "Side Leg Raise",
+    "description": "Lie on side. Lift top straight leg up. Lower slowly. Avoid using momentum.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Inner Thigh Lift",
+    "description": "Lie on side, cross top leg over. Lift bottom straight leg up towards ceiling.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Sissy Squat (Knees Only)",
+    "description": "Kneeling. Lean back keeping straight line from knees to head. Use quads to pull back up.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 7
+  },
+  {
+    "name": "Kang Squat",
+    "description": "Good morning (hinge) into deep squat, then back to good morning, then stand.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Horse Stance (Static Squat)",
+    "description": "Wide stance squat. Hold the bottom position isometrically. Keep chest up.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Single Leg Balance",
+    "description": "Stand on one leg. Close eyes to increase difficulty significantly.",
+    "target_muscles": [
+      "Core",
+      "Legs"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Standard Plank",
+    "description": "Forearms on floor. Body straight. Squeeze glutes and abs. Don't let hips sag.",
+    "target_muscles": [
+      "Core",
+      "Shoulders"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "High Plank",
+    "description": "Top of push-up position. Arms straight. Easier on core than forearm plank, harder on shoulders.",
+    "target_muscles": [
+      "Core",
+      "Shoulders"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Side Plank",
+    "description": "Prop on one forearm, body sideways straight line. Hold. Do not collapse shoulder.",
+    "target_muscles": [
+      "Core",
+      "Shoulders"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Up-Down Plank",
+    "description": "High plank to forearm plank and back. Place hands gently to avoid thumping sounds.",
+    "target_muscles": [
+      "Core",
+      "Arms",
+      "Shoulders"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Shoulder Tap Plank",
+    "description": "High plank. Tap opposite shoulder with hand. Prevent hips from rocking side to side.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Slow Mountain Climber",
+    "description": "High plank. Bring knee to chest slowly and squeeze abs. Switch legs with control. No running.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Cross-Body Mountain Climber",
+    "description": "High plank. Bring knee slowly to opposite elbow. Squeeze obliques.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Spiderman Plank Crunch",
+    "description": "Plank. Bring knee to same-side elbow externally. Squeeze side body.",
+    "target_muscles": [
+      "Core",
+      "Legs"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Reverse Plank",
+    "description": "Face up, hands behind you. Lift hips to straight line. Opens shoulders and chest.",
+    "target_muscles": [
+      "Core",
+      "Glutes",
+      "Legs"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Hollow Body Hold",
+    "description": "Lie back. Lift legs and shoulders inches off floor. Press lower back into ground hard.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "V-Up",
+    "description": "Lie back. Simultaneously lift legs and torso to touch toes. Control the descent.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "Tuck Up",
+    "description": "Like V-Up but bring knees to chest. Easier lever length than V-Up.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Bicycle Crunch",
+    "description": "Slow controlled twisting crunch connecting opposite elbow to knee.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Standard Crunch",
+    "description": "Small movement lifting shoulder blades off floor. Focus on contracting abs, not pulling neck.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Reverse Crunch",
+    "description": "Lift hips off floor bringing knees to chest. Controls lower abs.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Leg Raise",
+    "description": "Lie back. Lift straight legs to 90 degrees and lower slowly. Don't let back arch.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Flutter Kicks",
+    "description": "Legs straight, hovering off floor. Small controlled up/down kicks. Keep back pressed down.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Scissor Kicks",
+    "description": "Legs hovering. Cross one over other, open, cross other. Keep legs straight.",
+    "target_muscles": [
+      "Core",
+      "Legs"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Russian Twist",
+    "description": "Seated, leaning back. Rotate torso side to side. Keep feet on floor for easier, up for harder.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Heel Touch",
+    "description": "Lie back, knees bent. Side crunch to touch heel with hand. Alternate.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 1
+  },
+  {
+    "name": "Dead Bug",
+    "description": "Back flat on floor. Extend opposite arm and leg slowly while exhaling. Inhale to return.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Bird Dog",
+    "description": "All fours. Extend opposite arm and leg straight. Hold. Maintain flat back.",
+    "target_muscles": [
+      "Core",
+      "Glutes"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Superman",
+    "description": "Lie on stomach. Lift arms and legs off floor. Hold. Strengthens posterior chain.",
+    "target_muscles": [
+      "Core",
+      "Glutes"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Swimmer",
+    "description": "Prone position. Flutter arms and legs like swimming. Keep limbs off floor.",
+    "target_muscles": [
+      "Core",
+      "Shoulders",
+      "Glutes"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Windshield Wiper (Floor)",
+    "description": "Lie back, legs up. Lower legs side to side slowly. Use arms for support.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Seated Knee Tuck",
+    "description": "Sit balancing on glutes. Extend legs and torso away, then crunch together.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Star Plank",
+    "description": "High plank, walk hands and feet out wide into X shape. Hold. Very demanding.",
+    "target_muscles": [
+      "Core",
+      "Shoulders"
+    ],
+    "difficulty": 7
+  },
+  {
+    "name": "Plank Hip Dip",
+    "description": "Forearm plank. Rotate hips to touch floor lightly on each side.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "L-Sit (Tuck)",
+    "description": "Seated. Hands on floor. Push down to lift hips and tucked legs off floor.",
+    "target_muscles": [
+      "Core",
+      "Arms"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Boat Pose",
+    "description": "Yoga static hold. Balance on sit bones, body in V shape, arms reaching forward.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Plank Reach",
+    "description": "Plank. Reach one arm forward without shifting weight. Alternate.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Body Saw",
+    "description": "Forearm plank. Rock body forward and backward using ankles. Increases leverage on abs.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Bear Crawl Hold",
+    "description": "All fours. Lift knees 1 inch off floor. Hold static. Back flat.",
+    "target_muscles": [
+      "Core",
+      "Shoulders"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Side Plank Dip",
+    "description": "Side plank. Lower hips to floor and raise back up high.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Single Leg Deadlift (Bodyweight)",
+    "description": "Stand on one leg. Hinge hip back, torso forward. Leg extends back. Return.",
+    "target_muscles": [
+      "Legs",
+      "Core",
+      "Glutes"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Floor Angel",
+    "description": "Lie back. Arms 90 degrees. Slide arms overhead keeping wrists/elbows on floor.",
+    "target_muscles": [
+      "Back",
+      "Core"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Prone W Extension",
+    "description": "Lie prone. Arms in W shape. Lift chest and arms, squeezing shoulder blades.",
+    "target_muscles": [
+      "Back",
+      "Core"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Tabletop Hold",
+    "description": "Reverse tabletop. Hands behind, feet flat. Hips high. Hold.",
+    "target_muscles": [
+      "Glutes",
+      "Shoulders",
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Iron Cross Plank",
+    "description": "Plank with arms extended very wide to sides in T shape. Extremely hard on core/shoulders.",
+    "target_muscles": [
+      "Core",
+      "Shoulders",
+      "Chest"
+    ],
+    "difficulty": 8
+  },
+  {
+    "name": "Inchworm",
+    "description": "Bend to touch toes. Walk hands out to plank. Walk hands back. No jumping.",
+    "target_muscles": [
+      "Legs",
+      "Shoulders",
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Bear Crawl (Slow)",
+    "description": "Crawl forward opposite hand/foot. Knees close to ground. Silent movement.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Crab Walk",
+    "description": "Reverse table top. Walk hands and feet. Keeps triceps and glutes engaged.",
+    "target_muscles": [
+      "Arms",
+      "Glutes",
+      "Shoulders"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Hamstring Walkout",
+    "description": "Top of glute bridge. Walk feet out away from body on heels, then walk back in.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Shin Box Extension",
+    "description": "Sit 90/90 legs. Thrust hips up to kneeling. Lower slowly. Mobility and strength.",
+    "target_muscles": [
+      "Legs",
+      "Glutes"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Plank with Leg Lift",
+    "description": "Standard plank. Lift one leg straight up without arching back. Hold or pulse.",
+    "target_muscles": [
+      "Core",
+      "Glutes"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Side Plank Leg Lift",
+    "description": "Side plank. Lift top leg up. Requires immense stability.",
+    "target_muscles": [
+      "Core",
+      "Legs"
+    ],
+    "difficulty": 6
+  },
+  {
+    "name": "Hollow Rock",
+    "description": "Hold hollow body shape. Gently rock forward and back. Maintain curved spine.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 7
+  },
+  {
+    "name": "Prone Heel Claps",
+    "description": "Lie on stomach, legs straight and lifted. Tap heels together rapidly.",
+    "target_muscles": [
+      "Glutes",
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Kneeling Lean Back",
+    "description": "Kneel tall. Keep straight line from knees to head. Lean back as far as possible using quads.",
+    "target_muscles": [
+      "Legs",
+      "Core"
+    ],
+    "difficulty": 4
+  },
+  {
+    "name": "Butterfly Sit-Up",
+    "description": "Soles of feet together. Sit up all the way to touch toes. Lower slowly.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Marching Glute Bridge",
+    "description": "Hold glute bridge. Lift one knee to chest, then switch. Do not let hips drop.",
+    "target_muscles": [
+      "Glutes",
+      "Legs",
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Reverse Snow Angel",
+    "description": "Lie prone. Arms at sides. Lift arms and sweep overhead and back without touching floor.",
+    "target_muscles": [
+      "Back",
+      "Shoulders"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Quadruped Limb Lift",
+    "description": "All fours, knees hovering (Bear). Lift one arm or one leg without tipping.",
+    "target_muscles": [
+      "Core"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Scorpion Stretch/Twist",
+    "description": "Prone. Arms wide. Bring one foot across back to touch opposite hand. Dynamic mobility.",
+    "target_muscles": [
+      "Core",
+      "Legs"
+    ],
+    "difficulty": 2
+  },
+  {
+    "name": "Cat-Cow",
+    "description": "All fours. Arch back up (cat), then sink spine down (cow). Spine health.",
+    "target_muscles": [
+      "Back",
+      "Core"
+    ],
+    "difficulty": 1
+  },
+  {
+    "name": "World's Greatest Stretch",
+    "description": "Lunge, reach elbow to instep, rotate arm to ceiling. Slow flow.",
+    "target_muscles": [
+      "Legs",
+      "Core"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Crab Reach",
+    "description": "Crab position. Drive hips up and reach one arm over head towards floor.",
+    "target_muscles": [
+      "Core",
+      "Glutes"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Prone Sky Diver",
+    "description": "Lie on stomach. Lift everything up, arms wide, knees wide. Hold.",
+    "target_muscles": [
+      "Back"
+    ],
+    "difficulty": 3
+  },
+  {
+    "name": "Wall-less Wall Sit (Horse Stance)",
+    "description": "Just a static squat hold. Same as Horse Stance, included for naming clarity.",
+    "target_muscles": [
+      "Legs"
+    ],
+    "difficulty": 5
+  },
+  {
+    "name": "Side Lying Leg Circle",
+    "description": "Lie on side. Draw circles with top leg. Clockwise and counter-clockwise.",
+    "target_muscles": [
+      "Glutes",
+      "Legs"
+    ],
+    "difficulty": 2
+  }
+]

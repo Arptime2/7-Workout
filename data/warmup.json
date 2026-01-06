@@ -1,0 +1,158 @@
+[
+  {
+    "name": "Neck Circles",
+    "description": "Slowly rotate your head in large circles, first clockwise then counter-clockwise. Keep shoulders relaxed.",
+    "target_muscles": ["Neck"],
+    "difficulty": 1
+  },
+  {
+    "name": "Arm Circles",
+    "description": "Extend arms to sides and make large circles. Start small and gradually increase size. Reverse direction halfway.",
+    "target_muscles": ["Shoulders"],
+    "difficulty": 1
+  },
+  {
+    "name": "Shoulder Shrugs",
+    "description": "Raise shoulders toward ears slowly, hold briefly, then release. Focus on the stretch and release.",
+    "target_muscles": ["Traps", "Shoulders"],
+    "difficulty": 1
+  },
+  {
+    "name": "Shoulder Rolls",
+    "description": "Roll shoulders forward in large circles, then reverse to roll backward. Keep motion controlled.",
+    "target_muscles": ["Traps", "Shoulders"],
+    "difficulty": 1
+  },
+  {
+    "name": "Torso Twists",
+    "description": "Stand with feet shoulder-width, arms relaxed. Slowly twist torso left and right, letting arms swing naturally.",
+    "target_muscles": ["Obliques", "Core", "Lower Back"],
+    "difficulty": 1
+  },
+  {
+    "name": "Hip Circles",
+    "description": "Place hands on hips and make large circles with hips. Clockwise then counter-clockwise.",
+    "target_muscles": ["Hips", "Glutes"],
+    "difficulty": 1
+  },
+  {
+    "name": "Ankle Circles",
+    "description": "Lift one foot and rotate ankle in circles. Do both directions, then switch feet.",
+    "target_muscles": ["Calves", "Ankles"],
+    "difficulty": 1
+  },
+  {
+    "name": "Knee Hugs",
+    "description": "Stand tall, lift one knee toward chest and hug it. Hold briefly, then switch legs.",
+    "target_muscles": ["Hip Flexors", "Glutes"],
+    "difficulty": 1
+  },
+  {
+    "name": "Calf Raises",
+    "description": "Stand on toes, hold the contraction, then lower heels slowly. Repeat rhythmically.",
+    "target_muscles": ["Calves"],
+    "difficulty": 1
+  },
+  {
+    "name": "Standing Quad Stretch",
+    "description": "Stand on one leg, pull other foot toward glutes. Keep knees together, stand tall. Switch sides.",
+    "target_muscles": ["Quadriceps", "Hip Flexors"],
+    "difficulty": 1
+  },
+  {
+    "name": "Standing Hamstring Stretch",
+    "description": "Extend one leg forward, hinge at hips and reach toward toes. Keep back straight. Switch legs.",
+    "target_muscles": ["Hamstrings", "Lower Back"],
+    "difficulty": 1
+  },
+  {
+    "name": "Standing Groin Stretch",
+    "description": "Stand wide, bend one knee and lean to that side. Feel stretch in inner thigh. Switch sides.",
+    "target_muscles": ["Adductors", "Groin"],
+    "difficulty": 1
+  },
+  {
+    "name": "Side Lunges",
+    "description": "Step wide to one side, bend knee and lean into the stretch. Keep other leg straight. Switch sides.",
+    "target_muscles": ["Adductors", "Groin", "Quadriceps"],
+    "difficulty": 2
+  },
+  {
+    "name": "Walking Lunges",
+    "description": "Step forward into a lunge, then drive through front heel to stand and step forward with other leg.",
+    "target_muscles": ["Quadriceps", "Glutes", "Hamstrings"],
+    "difficulty": 2
+  },
+  {
+    "name": "Butt Kicks",
+    "description": "Jog in place, kicking heels toward glutes. Keep upper body stable, land softly.",
+    "target_muscles": ["Hamstrings", "Quadriceps", "Calves"],
+    "difficulty": 2
+  },
+  {
+    "name": "High Knees",
+    "description": "Jog in place, lifting knees as high as possible. Pump arms for momentum. Stay light on feet.",
+    "target_muscles": ["Hip Flexors", "Quadriceps", "Core"],
+    "difficulty": 2
+  },
+  {
+    "name": "Jumping Jacks (Slow)",
+    "description": "Jump feet wide while raising arms overhead. Jump back together and lower arms. Do slowly to warm up.",
+    "target_muscles": ["Full Body", "Calves", "Shoulders"],
+    "difficulty": 2
+  },
+  {
+    "name": "Mountain Climbers (Slow)",
+    "description": "Start in high plank. Slowly draw one knee toward chest, then switch. Keep hips level.",
+    "target_muscles": ["Core", "Hip Flexors", "Shoulders"],
+    "difficulty": 2
+  },
+  {
+    "name": "Inchworm Walk",
+    "description": "Stand tall, bend forward and walk hands out to plank. Walk hands back to feet and stand. Repeat.",
+    "target_muscles": ["Hamstrings", "Core", "Shoulders"],
+    "difficulty": 2
+  },
+  {
+    "name": "Child's Pose",
+    "description": "Kneel, sit back on heels, reach arms forward on floor. Breathe deeply and relax.",
+    "target_muscles": ["Lower Back", "Shoulders", "Hips"],
+    "difficulty": 1
+  },
+  {
+    "name": "Cat-Cow Stretch",
+    "description": "On hands and knees, arch back up like a cat, then drop belly and lift chest. Move slowly between positions.",
+    "target_muscles": ["Spine", "Core", "Shoulders"],
+    "difficulty": 1
+  },
+  {
+    "name": "Downward Dog",
+    "description": "Push hips up and back, forming inverted V with body. Press chest toward thighs, heels toward ground.",
+    "target_muscles": ["Hamstrings", "Calves", "Shoulders", "Spine"],
+    "difficulty": 2
+  },
+  {
+    "name": "World's Greatest Stretch",
+    "description": "Lunge forward, place opposite hand down, rotate torso toward front leg. Reach arm to sky. Switch sides.",
+    "target_muscles": ["Hip Flexors", "Spine", "Obliques"],
+    "difficulty": 2
+  },
+  {
+    "name": "Leg Swings",
+    "description": "Hold wall for balance. Swing one leg forward and back in controlled motion. Do both legs.",
+    "target_muscles": ["Hip Flexors", "Hamstrings", "Glutes"],
+    "difficulty": 1
+  },
+  {
+    "name": "Tricep Cross Body Stretch",
+    "description": "Reach one arm across body, use other hand to gently pull. Feel stretch in back of arm. Switch arms.",
+    "target_muscles": ["Triceps"],
+    "difficulty": 1
+  },
+  {
+    "name": "Chest Opener",
+    "description": "Clasp hands behind back, squeeze shoulder blades, lift arms slightly. Open chest and breathe.",
+    "target_muscles": ["Chest", "Shoulders"],
+    "difficulty": 1
+  }
+]
